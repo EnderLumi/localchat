@@ -1,0 +1,1 @@
+# Hilfsfunktionen, Farben, Zeitstempel

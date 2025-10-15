@@ -1,0 +1,1 @@
+# Serverbefehle (/kick, /ban, /info server)

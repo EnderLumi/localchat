@@ -1,4 +1,4 @@
-# Nachrichtenformate, Serialisierung, Pakettypen
+# Message formats, serialization, packet types
 import json
 import time
 

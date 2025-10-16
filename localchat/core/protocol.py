@@ -2,18 +2,32 @@
 import json
 import time
 
-PACKAGE_TYPE = {
-    "public", "private", "broadcast", "join", "leave", "system", "info", "error", "ping", "pong"
+
+PACKET_TYPES= {
+    "public",
+    "private",
+    "broadcast",
+    "join",
+    "leave",
+    "system",
+    "info",
+    "error",
+    "ping",
+    "pong"
 }
 
 REQUIRED_FIELDS = {
-    "type", "from", "timestamp", "payload"
+    "type",
+    "from",
+    "timestamp",
+    "payload"
 }
 
 
 def make_packet(packet_type, sender, payload, **kwargs):
-    if packet_type not in PACKAGE_TYPE:
-        raise ValueError("Unknown packet type '%s'" % packet_type)
+    if packet_type not in PACKET_TYPES:
+        raise ValueError(f"Unbekannter Pakettyp: {packet_type}")
+        #raise ValueError("Unknown packet type '%s'" % packet_type)
     if not isinstance(payload, dict):
         raise TypeError("Payload must be a dict")
 
@@ -54,13 +68,14 @@ def decode_packet(raw):
     return packet
 
 
+
 def validate_packet(packet):
     # checks structural validity
     if not isinstance(packet, dict):
         return False
     if not REQUIRED_FIELDS.issubset(packet.keys()):
         return False
-    if packet["type"] not in PACKAGE_TYPE:
+    if packet["type"] not in PACKET_TYPES:
         return False
     if not isinstance(packet["payload"], dict):
         return False

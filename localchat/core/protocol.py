@@ -2,12 +2,25 @@
 import json
 import time
 
-PACKAGE_TYPE = {
-    "public", "private", "broadcast", "join", "leave", "system", "info", "error", "ping", "pong"
+
+PACKAGE_TYPE= {
+    "public"
+    "private"
+    "broadcast"
+    "join"
+    "leave"
+    "system"
+    "info"
+    "error"
+    "ping"
+    "pong"
 }
 
 REQUIRED_FIELDS = {
-    "type", "from", "timestamp", "payload"
+    "type"
+    "from"
+    "timestamp"
+    "payload"
 }
 
 
@@ -52,6 +65,7 @@ def decode_packet(raw):
     except (UnicodeDecodeError, json.JSONDecodeError) as e:
         raise ValueError(f"Error during decoding packet: {e}")
     return packet
+
 
 
 def validate_packet(packet):

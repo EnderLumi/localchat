@@ -1,6 +1,7 @@
 # TCP/UDP connections, socket wrappers
 import socket
 import threading
+import time
 
 class TCPConnection:
 
@@ -10,13 +11,11 @@ class TCPConnection:
         self.listener_thread = None
 
 
-
     def connect(self, host, port):
         """Connects to a TCP server"""
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect((host, port))
         self.alive = True
-
 
 
     def send(self, data:bytes):
@@ -26,13 +25,11 @@ class TCPConnection:
         self.sock.sendall(data)
 
 
-
     def receive(self, bufsize=4096) -> bytes:
         """Receives bytes synchronously"""
         if not self.alive:
             raise ConnectionError("Connection closed")
         return self.sock.recv(bufsize)
-
 
 
     def listen(self, callback, bufsize=4096):
@@ -55,7 +52,6 @@ class TCPConnection:
         self.listener_thread.start()
 
 
-
     def close(self):
         """Terminates connection and thread"""
         self.alive = False
@@ -67,6 +63,66 @@ class TCPConnection:
             self.sock.close()
         self.sock = None
 
+
+
+class UDPBroadcast:
+
+    def __init__(self, port=51111):
+        self.port = port
+        self.sock = None
+        self.alive = False
+        self.thread = None
+
+
+    def broadcast(self, message: str, interval=2.0):
+        """Regularly sends broadcasts to all devices on the LAN"""
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        self.alive = True
+
+        def loop():
+            data = message.encode("utf-8")
+            while self.alive:
+                try:
+                    self.sock.sendto(data, ("255.255.255.255", self.port))
+                except OSError:
+                    break
+                time.sleep(interval)
+            self.sock.close()
+
+        self.thread = threading.Thread(target=loop, daemon=True)
+        self.thread.start()
+
+
+    def listen(self, callback):
+        """Receives broadcasts and calls callback(message, addr)"""
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.sock.bind(("", self.port))
+        self.alive = True
+
+        def loop():
+            while self.alive:
+                try:
+                    data, addr = self.sock.recvfrom(1024)
+                    callback(data.decode("utf-8"), addr)
+                except OSError:
+                    break
+            self.sock.close()
+
+        self.thread = threading.Thread(target=loop, daemon=True)
+        self.thread.start()
+
+
+    def stop(self):
+        """Terminates broadcast or listener"""
+        self.alive = False
+        if self.sock:
+            try:
+                self.sock.close()
+            except OSError:
+                pass
+            self.sock = None
 
 """
 if __name__ == "__main__":
@@ -99,3 +155,22 @@ if __name__ == "__main__":
     time.sleep(0.5)
     client.close()
 """
+
+
+if __name__ == "__main__":
+    import time
+
+    def on_broadcast(msg, addr):
+        print(f"Server entdeckt: {msg} von {addr}")
+
+    # Server-Broadcast starten
+    server = UDPBroadcast(port=50000)
+    server.broadcast("localchat.servername")
+
+    # Client lauscht
+    client = UDPBroadcast(port=50000)
+    client.listen(on_broadcast)
+
+    time.sleep(5)
+    server.stop()
+    client.stop()

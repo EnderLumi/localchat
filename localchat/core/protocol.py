@@ -6,7 +6,6 @@ import time
 PACKET_TYPES= {
     "public",
     "private",
-    "broadcast",
     "join",
     "leave",
     "system",

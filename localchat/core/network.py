@@ -130,7 +130,7 @@ if __name__ == "__main__":
     def echo_handler(data):
         print("Received:", data.decode())
 
-    # Server-Test in Thread
+    # Server test in thread
     def server():
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.bind(("127.0.0.1", 9999))
@@ -159,13 +159,13 @@ if __name__ == "__main__":
 if __name__ == "__main__":
 
     def on_broadcast(msg, addr):
-        print(f"Server entdeckt: {msg} von {addr}")
+        print(f"Server detected: {msg} von {addr}")
 
-    # Server-Broadcast starten
+    # Start server broadcast
     server = UDPBroadcast(port=50000)
     server.broadcast("localchat.servername")
 
-    # Client lauscht
+    # Client listening
     client = UDPBroadcast(port=50000)
     client.listen(on_broadcast)
 

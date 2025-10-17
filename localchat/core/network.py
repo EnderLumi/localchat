@@ -126,7 +126,6 @@ class UDPBroadcast:
 
 """
 if __name__ == "__main__":
-    import time
 
     def echo_handler(data):
         print("Received:", data.decode())
@@ -156,9 +155,8 @@ if __name__ == "__main__":
     client.close()
 """
 
-
+"""
 if __name__ == "__main__":
-    import time
 
     def on_broadcast(msg, addr):
         print(f"Server entdeckt: {msg} von {addr}")
@@ -174,3 +172,4 @@ if __name__ == "__main__":
     time.sleep(5)
     server.stop()
     client.stop()
+"""

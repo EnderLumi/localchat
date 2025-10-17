@@ -42,7 +42,6 @@ def make_packet(packet_type, sender, payload, **kwargs):
     return packet
 
 
-
 def encode_packet(packet):
     # dict -> UTF-8 bytes
     if not isinstance(packet, dict):
@@ -52,7 +51,6 @@ def encode_packet(packet):
     except (TypeError, ValueError) as e:
         raise ValueError(f"Error during serialization: {e}")
     return json_text.encode("utf-8")
-
 
 
 def decode_packet(raw):
@@ -65,7 +63,6 @@ def decode_packet(raw):
     except (UnicodeDecodeError, json.JSONDecodeError) as e:
         raise ValueError(f"Error during decoding packet: {e}")
     return packet
-
 
 
 def validate_packet(packet):

@@ -66,3 +66,36 @@ class TCPConnection:
                 pass
             self.sock.close()
         self.sock = None
+
+
+"""
+if __name__ == "__main__":
+    import time
+
+    def echo_handler(data):
+        print("Empfangen:", data.decode())
+
+    # Server-Test in Thread
+    def server():
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.bind(("127.0.0.1", 9999))
+        s.listen(1)
+        conn, _ = s.accept()
+        while True:
+            data = conn.recv(1024)
+            if not data:
+                break
+            conn.sendall(data)
+        conn.close()
+        s.close()
+
+    threading.Thread(target=server, daemon=True).start()
+    time.sleep(0.3)
+
+    client = TCPConnection()
+    client.connect("127.0.0.1", 9999)
+    client.listen(echo_handler)
+    client.send(b"Hallo Netzwerk")
+    time.sleep(0.5)
+    client.close()
+"""

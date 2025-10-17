@@ -66,4 +66,3 @@ class TCPConnection:
                 pass
             self.sock.close()
         self.sock = None
-

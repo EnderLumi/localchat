@@ -1,4 +1,4 @@
-# TCP/UDP-Verbindungen, Socket-Wrapper
+# TCP/UDP connections, socket wrappers
 import socket
 import threading
 
@@ -73,7 +73,7 @@ if __name__ == "__main__":
     import time
 
     def echo_handler(data):
-        print("Empfangen:", data.decode())
+        print("Received:", data.decode())
 
     # Server-Test in Thread
     def server():
@@ -95,7 +95,7 @@ if __name__ == "__main__":
     client = TCPConnection()
     client.connect("127.0.0.1", 9999)
     client.listen(echo_handler)
-    client.send(b"Hallo Netzwerk")
+    client.send(b"hello network")
     time.sleep(0.5)
     client.close()
 """

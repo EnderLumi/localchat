@@ -82,7 +82,7 @@ Befehle:
 - /ping [name/server]				 misst Latenz 
 - /version							 zeigt Programmversion 
 - /uptime							 zeigt Laufzeit des Servers 
-- /broadcast 						 Nachricht an alle Server im Netzwerk
+- /broadcast 						 Nachricht an alle user im Netzwerk
 - /new servername					 Neuen Servernamen (only Host)
 - /new Passwort					     Neues Passwort für den server setzen (only Host)
 - /kick [name]						 entfernt Nutzer (only Host)

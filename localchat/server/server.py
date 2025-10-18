@@ -1,7 +1,7 @@
 # Hauptklasse Server
 import socket
 import threading
-from localchat.core.protocol import decode_packet, validate_packet, encode_packet
+from localchat.core.protocol import encode_packet, decode_packet, validate_packet
 
 class ChatServer:
 
@@ -10,7 +10,7 @@ class ChatServer:
         self.port = port
         self.server_sock = None
         self.clients = {}
-        self.alive = True
+        self.alive = False
 
 
     def start(self):
@@ -39,6 +39,12 @@ class ChatServer:
 
     def _client_loop(self, conn, addr):
         """Receives messages from the client and distributes them"""
+        try:
+            welcome_packet = {"type": "system", "from": "server", "payload": {"message": "joined"}}
+            conn.sendall(encode_packet(welcome_packet))
+        except OSError:
+            pass
+
         while self.alive:
             try:
                 raw = conn.recv(4096)
@@ -111,5 +117,16 @@ if __name__ == "__main__":
     simulate_client("Bob")
 
     time.sleep(3)
-    server.stop()
+    #server.stop()
 """
+
+if __name__ == "__main__":
+    server = ChatServer()
+    server.start()
+    print("[SERVER] running. Press Ctrl+C to stop.")
+    try:
+        while True:
+            pass
+    except KeyboardInterrupt:
+        print("[SERVER] stopping...")
+        server.stop()

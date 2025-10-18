@@ -76,7 +76,7 @@ class UDPBroadcast:
 
     def broadcast(self, message: str, interval=2.0):
         """Regularly sends broadcasts to all devices on the LAN"""
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         self.alive = True
 
@@ -96,7 +96,7 @@ class UDPBroadcast:
 
     def listen(self, callback):
         """Receives broadcasts and calls callback(message, addr)"""
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.bind(("", self.port))
         self.alive = True

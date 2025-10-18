@@ -5,21 +5,27 @@ from localchat.core.protocol import make_packet, encode_packet, decode_packet, v
 
 class ChatClient:
 
-    def __init__(self, username, host="127.0.0.1", port=51121):
+    def __init__(self, username: str, host="127.0.0.1", port: int =51121):
         self.username = username
         self.host = host
         self.port = port
-        self.sock = None
+        self.sock: socket.socket | None = None
         self.alive = False
-        #self.listener_thread = None
+        self._lock_ = threading.Lock()
 
 
     def connect(self):
-        """Connects to the chat server"""
+        """Connects to the chat server and starts listener"""
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.connect((self.host, self.port))
+        try:
+            self.sock.connect((self.host, self.port))
+        except OSError as e:
+            print(f"[CLIENT] connection failed: {e}")
+            return
+
         self.alive = True
         print(f"[CLIENT] connected to {self.host}:{self.port}")
+
         threading.Thread(target=self._listen, daemon=True).start()
 
         join_packet = make_packet("join", self.username, {"message": f"{self.username} joined"})
@@ -27,70 +33,90 @@ class ChatClient:
 
 
     def send_message(self, text: str):
-        """Send a message to the chat server"""
-        pkt = make_packet("public", self.username, {"message": text})
-        self.send_packet(pkt)
+        """Send a public message to the server"""
+        if not text.strip():
+            return
+        self.send_packet(make_packet("public", self.username, {"message": text}))
+        #packet = make_packet("public", self.username, {"message": text})
+        #self.send_packet(packet)
 
 
     def send_packet(self, packet):
         """Send a prepared package"""
-        if not self.alive:
-            raise ConnectionError("Not connected")
+        if not self.alive or self.sock is None:
+            print("[CLIENT] not connected")
+            #raise ConnectionError("Not connected")
+            return
         try:
-            self.sock.sendall(encode_packet(packet))
+            data = encode_packet(packet) + b"\n"
+            with self._lock_:
+                self.sock.sendall(data)
         except OSError as e:
             print(f"[CLIENT] send error: {e}")
-            self.alive = False
-            #self.close()
-
+            self.close()
 
     def _listen(self):
-        """Receives incoming packets"""
+        """Listen to incoming packets"""
+        buffer = b""
         while self.alive:
             try:
                 data = self.sock.recv(4096)
                 if not data:
                     print("[CLIENT] server closed connection")
                     break
-                packet = decode_packet(data)
-                if validate_packet(packet):
-                    self._handle_packet(packet)
-            except (OSError, ValueError) as e:
-                print(f"[CLIENT] Listen error: {e}")
+                buffer += data
+                while b"\n" in buffer:
+                    packet_bytes, buffer = buffer.split(b"\n", 1)
+                    try:
+                        packet = decode_packet(packet_bytes)
+                        if validate_packet(packet):
+                            self._handle_packet(packet)
+                    except Exception as e:
+                        print(f"[CLIENT] decode error: {e}")
+            except OSError:
                 break
         self.close()
 
 
-    def _handle_packet(self, packet):
+    def _handle_packet(self, packet: dict):
         """Displays messages in the terminal"""
-        ptype = packet["type"]
-        sender = packet["from"]
-        payload = packet["payload"]
+        ptype = packet.get("type")
+        sender = packet.get("from")
+        payload = packet.get("payload", {})
 
         if ptype == "public":
             print(f"{sender}: {payload.get('message', '')}")
-            #msg = payload.get("message", "")
-            #print(f"[sender] {msg}")
         elif ptype == "system":
             print(f"[SYSTEM] {payload.get('message', '')}")
 
 
     def close(self):
+        """ends the connection"""
         if not self.alive:
             return
         self.alive = False
-        try:
-            self.sock.close()
-        except OSError:
-            pass
+        if self.sock:
+            try:
+                self.sock.close()
+            except OSError:
+                pass
         print(f"[CLIENT] {self.username} disconnected")
 
 
 if __name__ == "__main__":
-    import time
-    client = ChatClient("Alice", host="127.0.0.1", port=51121)
+    client = ChatClient("Username", host="127.0.0.1", port=51121)
     client.connect()
-    time.sleep(1)
-    client.send_message("hello world")
-    #time.sleep(1)
-    #client.close()
+
+    try:
+        while True:
+            msg = input()
+            if msg.lower() in ("exit", "quit"):
+                break
+            client.send_message(msg)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        client.close()
+
+
+#aufrufen aus dem localchat dc mit python3 -m localchat.client.client

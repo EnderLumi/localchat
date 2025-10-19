@@ -1,2 +1,0 @@
-[console_scripts]
-localchat = localchat.__main__:main

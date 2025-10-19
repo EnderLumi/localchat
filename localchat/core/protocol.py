@@ -1,7 +1,6 @@
 # Message formats, serialization, packet types
 import json
 import time
-#from ftplib import print_line
 
 PACKET_TYPES= {
     "public",

@@ -1,9 +1,22 @@
-# Hauptklasse Server
+# ChatServer:
+# A TCP-based chat server that accepts connections from multiple clients.
+# The server receives messages from clients, validates and decodes them, and sends them to all other
+# connected clients (broadcast). Communication takes place in separate threads for each client so that
+# the server is not blocked when it is currently working with another client.
+#
+# Methods:
+# - start(): Starts the TCP server and accepts new clients
+# - _accept_loop(): Waits for new clients and starts a thread for each connection
+# - _client_loop(conn, addr): Processes messages from a single client and sends them to others
+# - _send_packet(conn, packet): Sends a message to a client
+# - broadcast(packet, exclude=None): Sends a message to all clients except the specified one
+# - stop(): Stops the server and closes all connections
+#
+# Run from the localchat dir with: "python3 -m localchat.server.server"
+
+
 import socket
 import threading
-
-from attr.filters import exclude
-
 from localchat.core.protocol import encode_packet, decode_packet, validate_packet
 
 class ChatServer:
@@ -122,7 +135,3 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("[SERVER] stopping...")
         server.stop()
-
-
-
-#aufrufen aus dem localchat dc mit python3 -m localchat.server.server

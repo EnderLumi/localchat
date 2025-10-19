@@ -1,4 +1,21 @@
-# Hauptklasse Client
+# ChatClient:
+# A simple TCP-based chat client that connects to a chat server, sends messages,
+# and receives messages from other clients.
+# The client communicates with the server using a custom packet format and handles
+# incoming and outgoing messages in separate threads.
+#
+# Methods:
+# - connect(): Establishes connection to the server and starts a listener thread
+# - send_message(text): Sends a public message to the server
+# - send_packet(packet): Sends a prepared packet to the server
+# - _listen(): Listens for incoming packets and handles them
+# - _handle_packet(packet): Processes incoming messages and prints them to the terminal
+# - close(): Closes the connection and terminates the client
+#
+# Run from the localchat dir with: "python3 -m localchat.client.client"
+# (should only be run if server is already running)
+
+
 import socket
 import threading
 from localchat.core.protocol import make_packet, encode_packet, decode_packet, validate_packet
@@ -117,6 +134,3 @@ if __name__ == "__main__":
         pass
     finally:
         client.close()
-
-
-#aufrufen aus dem localchat dc mit python3 -m localchat.client.client

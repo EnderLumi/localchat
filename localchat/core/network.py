@@ -124,6 +124,8 @@ class UDPBroadcast:
                 pass
             self.sock = None
 
+
+#testmethode (einfach_ignorieren):
 """
 if __name__ == "__main__":
 
@@ -155,6 +157,8 @@ if __name__ == "__main__":
     client.close()
 """
 
+
+#testmethode2 (einfach_ignorieren2):
 """
 if __name__ == "__main__":
 

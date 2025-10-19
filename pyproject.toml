@@ -14,12 +14,17 @@ dependencies = [
 ]
 
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project.scripts]
 localchat = "localchat.__main__:main"
-localchat-windows = "localchat.Scripts.localchat:run"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.exclude-package-data]
+"*" = ["*.cmd"]
 
 [project.urls]
 Homepage = "https://github.com/enderlumi/localchat"

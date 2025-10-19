@@ -19,6 +19,7 @@ build-backend = "setuptools.build_meta"
 
 [project.scripts]
 localchat = "localchat.__main__:main"
+localchat-windows = "localchat.Scripts.localchat:run"
 
 [project.urls]
 Homepage = "https://github.com/enderlumi/localchat"

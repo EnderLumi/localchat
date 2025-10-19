@@ -1,7 +1,7 @@
 [project]
 name = "localchat"
 version = "1.0.0"
-description = "Lokaler Chat über LAN"
+description = "Local chat via LAN"
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
@@ -14,3 +14,8 @@ build-backend = "setuptools.build_meta"
 
 [project.scripts]
 localchat = "localchat.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/enderlumi/localchat"
+Source = "https://github.com/enderlumi/localchat"
+Issues = "https://github.com/enderlumi/localchat/issues"

@@ -13,7 +13,7 @@ class ServerDiscovery:
     def start(self):
         """Start listening to server announcements"""
         def on_broadcast(message, addr):
-            if message.startswith("LOCALCOM_SERVER:"):
+            if message.startswith("LOCALCHAT_SERVER:"):
                 name = message.split(":", 1)[1]
                 self.found_servers[addr[0]] = name
         self._listener.listen(on_broadcast)

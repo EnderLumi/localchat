@@ -14,7 +14,7 @@ class ServerAnnouncer:
 
     def start(self):
         """Start broadcasting"""
-        msg = f"LOCALCOM_SERVER:{self.name}"
+        msg = f"LOCALCHAT_SERVER:{self.name}"
         self._broadcaster.broadcast(msg, interval=2.0)
 
 

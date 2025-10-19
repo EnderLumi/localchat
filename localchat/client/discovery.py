@@ -9,6 +9,7 @@ class ServerDiscovery:
         self._listener = UDPBroadcast(port=self.port)
         self.found_servers = {}  # addr -> name
 
+
     def start(self):
         """Start listening to server announcements"""
         def on_broadcast(message, addr):
@@ -17,9 +18,11 @@ class ServerDiscovery:
                 self.found_servers[addr[0]] = name
         self._listener.listen(on_broadcast)
 
+
     def stop(self):
         """Stop the Discovery"""
         self._listener.stop()
+
 
     def list_servers(self):
         """Returns all servers found"""

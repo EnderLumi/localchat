@@ -91,8 +91,11 @@ Befehle:
 
 
 
-
-
+Namensfarben und auch Text autocomplet für z.B. [/msg Ma] und der schlägt schon vor [/msg Maximilian] mit Tap bestätigen
+das geht über promt_toolkit
+mit: pip install prompt_toolkit
+könnte man ja user optional fragen, ob sie dieses feature haben wollen, weil sie wollen evlt nicht das wir einfach so
+automatisch so etwas herrunterladen.
 
 
 

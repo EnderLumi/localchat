@@ -54,15 +54,12 @@ class ChatClient:
         if not text.strip():
             return
         self.send_packet(make_packet("public", self.username, {"message": text}))
-        #packet = make_packet("public", self.username, {"message": text})
-        #self.send_packet(packet)
 
 
     def send_packet(self, packet):
         """Send a prepared package"""
         if not self.alive or self.sock is None:
-            print("[CLIENT] not connected")
-            #raise ConnectionError("Not connected")
+            print("[CLIENT] not connected to a server")
             return
         try:
             data = encode_packet(packet) + b"\n"
@@ -123,11 +120,12 @@ class ChatClient:
 if __name__ == "__main__":
     client = ChatClient("Username", host="127.0.0.1", port=51121)
     client.connect()
+    print("[CLIENT] Connected to server. Press /exit to stop.")
 
     try:
         while True:
             msg = input()
-            if msg.lower() in ("exit", "quit"):
+            if msg.lower() in ("/exit", "/quit","/leave"):
                 break
             client.send_message(msg)
     except KeyboardInterrupt:

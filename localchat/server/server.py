@@ -126,12 +126,28 @@ class ChatServer:
 
 
 if __name__ == "__main__":
+    from localchat.client.client import ChatClient
+
     server = ChatServer()
     server.start()
-    print("[SERVER] running. Press Ctrl+C to stop.")
+
+    print("[SERVER] running. Launching local admin client...")
+    print("[SERVER] running. Press /exit to stop.")
+
+    # interner "Server-Client"
+    admin_client = ChatClient("UsernameServer", host="127.0.0.1", port=51121)
+    admin_client.connect()
+
     try:
         while True:
-            pass
+            msg = input()
+            if msg.lower() in ("/exit", "/quit", "/leave"):
+                break
+            admin_client.send_message(msg)
     except KeyboardInterrupt:
-        print("[SERVER] stopping...")
+        pass
+    finally:
+        admin_client.close()
         server.stop()
+        print("[SERVER] stopped")
+

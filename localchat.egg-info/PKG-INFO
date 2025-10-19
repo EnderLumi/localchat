@@ -1,3 +1,13 @@
+Metadata-Version: 2.4
+Name: localchat
+Version: 1.0.0
+Summary: Lokaler Chat über LAN
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: colorama>=0.4.6
+Dynamic: license-file
+
 # localchat
 just another stupid Lan Chat
 

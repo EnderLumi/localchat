@@ -1,6 +1,6 @@
 [project]
 name = "lanparty"
-version = "1.0.0"
+version = "1.0.1"
 description = "Local chat via LAN"
 authors = [
     {name="EnderLumi"},

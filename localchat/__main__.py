@@ -14,10 +14,10 @@ from localchat.config.defaults import DEFAULT_PORT
 
 
 def main():
-    print("____LOCALCOM____") #das muss noch ihrgendwie cooler
+    print("____LOCALCHAT____") #das muss noch ihrgendwie cooler
 
     username = get_user_name()
-    print("Registered as:: " + username)
+    print("Registered as: " + username)
     if username.startswith("New User"):
         new_name = input("Enter a name: ").strip()
         if new_name:

@@ -1,7 +1,12 @@
 [project]
-name = "lanparty" #pypi-name
+name = "lanparty"
 version = "1.0.0"
 description = "Local chat via LAN"
+authors = [
+    {name="EnderLumi"},
+    {name="Leon"}
+]
+license = {text = "GPL-3.0"}
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [

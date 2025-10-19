@@ -1,6 +1,6 @@
-"""Receives UDP broadcasts and detects available localcom servers in the LAN"""
-from localcom.core.network import UDPBroadcast
-from localcom.config.defaults import DISCOVERY_PORT
+"""Receives UDP broadcasts and detects available localchat servers in the LAN"""
+from localchat.core.network import UDPBroadcast
+from localchat.config.defaults import DISCOVERY_PORT
 
 class ServerDiscovery:
 

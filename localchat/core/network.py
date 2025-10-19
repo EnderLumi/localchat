@@ -3,7 +3,7 @@ import socket
 import threading
 import time
 
-from localcom.config.defaults import UDP_BROADCAST_PORT
+from localchat.config.defaults import UDP_BROADCAST_PORT
 
 class TCPConnection:
 
@@ -169,7 +169,7 @@ if __name__ == "__main__":
 
     # Start server broadcast
     server = UDPBroadcast(port=50000)
-    server.broadcast("localcom.servername")
+    server.broadcast("localchat.servername")
 
     # Client listening
     client = UDPBroadcast(port=50000)

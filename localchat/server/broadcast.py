@@ -1,7 +1,7 @@
 # UDP-Server_display
 # Sends regular UDP-Broadcasts to make the server visible on the LAN
-from localcom.core.network import UDPBroadcast
-from localcom.config.defaults import DISCOVERY_PORT
+from localchat.core.network import UDPBroadcast
+from localchat.config.defaults import DISCOVERY_PORT
 
 
 class ServerAnnouncer:

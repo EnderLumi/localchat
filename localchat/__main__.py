@@ -1,16 +1,16 @@
-# localcom/__main__.py:
-# CLI Entry point for localcom
-# Run with: localcom start   or    from the right dir with: python3 -m localcom
+# localchat/__main__.py:
+# CLI Entry point for localchat
+# Run with: localchat start   or    from the right dir with: python3 -m localchat
 
 import sys
 import time
 
-from localcom.core.storage import get_user_name, set_user_name
-from localcom.client.client import ChatClient
-from localcom.client.discovery import ServerDiscovery
-from localcom.server.server import ChatServer
-from localcom.server.broadcast import ServerAnnouncer
-from localcom.config.defaults import DEFAULT_PORT
+from localchat.core.storage import get_user_name, set_user_name
+from localchat.client.client import ChatClient
+from localchat.client.discovery import ServerDiscovery
+from localchat.server.server import ChatServer
+from localchat.server.broadcast import ServerAnnouncer
+from localchat.config.defaults import DEFAULT_PORT
 
 
 def main():
@@ -135,4 +135,4 @@ if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "start":
         main()
     else:
-        print("Try use: localcom start")
+        print("Try use: localchat start")

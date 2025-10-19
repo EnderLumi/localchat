@@ -12,13 +12,13 @@
 # - _handle_packet(packet): Processes incoming messages and prints them to the terminal
 # - close(): Closes the connection and terminates the client
 #
-# Run from the localcom dir with: "python3 -m localcom.client.client"
+# Run from the localchat dir with: "python3 -m localchat.client.client"
 # (should only be run if server is already running)
 
 
 import socket
 import threading
-from localcom.core.protocol import make_packet, encode_packet, decode_packet, validate_packet
+from localchat.core.protocol import make_packet, encode_packet, decode_packet, validate_packet
 
 class ChatClient:
 

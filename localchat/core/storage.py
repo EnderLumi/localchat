@@ -84,7 +84,7 @@ if _USER_NAME is None:
 
 
 if __name__ == "__main__":
-    print("starting tests: localcom/core/storage")
+    print("starting tests: localchat/core/storage")
     print(f"system: {platform.system()}")
     print(f"app data dir: {get_app_data_dir()}")
     print(f"storage dir: {get_storage_dir()}")
@@ -93,4 +93,4 @@ if __name__ == "__main__":
     print(f"attempting to set user name to: {new_user_name}")
     set_user_name(new_user_name)
     print(f"updated user name: {get_user_name()}")
-    print("finished tests: localcom/core/storage")
+    print("finished tests: localchat/core/storage")

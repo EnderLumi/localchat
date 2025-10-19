@@ -1,11 +1,7 @@
-# localcom
+# localchat
 just another stupid Lan Chat
 
 Bitte in Editor Format anschauen:
-
-
-test
-
 
 localcom/
 │

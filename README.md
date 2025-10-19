@@ -21,6 +21,7 @@ localchat/
 │   │   ├─ __init__.py
 │   │   ├─ client.py              # Hauptklasse Client
 │   │   ├─ commands.py            # /msg, /join, /leave usw.
+│   │   ├─ discovery.py           # empfängt UDP-Broadcasts
 │   │   ├─ handlers.py            # Verarbeitung eingehender Pakete
 │   │   └─ interface.py           # Terminal-Ein/Ausgabe
 │   │

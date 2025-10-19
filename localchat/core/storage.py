@@ -76,8 +76,11 @@ def _load_user_name() -> str|None:
     return str(Path(filename).read_bytes(),"utf-8")
 
 _USER_NAME = _load_user_name()
-if _USER_NAME == None:
-    set_user_name(f"New User {random.randint(0,0xFFFF)}")
+if _USER_NAME is None:
+    user_input = input("Choose your username: ").strip()
+    if not user_input:
+        set_user_name(f"New User {random.randint(0,0xFFFF)}")
+    set_user_name(user_input)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,16 @@
+[project]
+name = "localchat"
+version = "1.0.0"
+description = "Lokaler Chat über LAN"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "colorama>=0.4.6"
+]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project.scripts]
+localchat = "localchat.__main__:main"

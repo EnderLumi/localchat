@@ -18,10 +18,11 @@
 import socket
 import threading
 from localchat.core.protocol import encode_packet, decode_packet, validate_packet
+from localchat.config.defaults import DEFAULT_PORT
 
 class ChatServer:
 
-    def __init__(self, host='0.0.0.0', port=51121):
+    def __init__(self, host='0.0.0.0', port=DEFAULT_PORT):
         self.host = host
         self.port = port
         self.sock = None
@@ -132,10 +133,10 @@ if __name__ == "__main__":
     server.start()
 
     print("[SERVER] running. Launching local admin client...")
-    print("[SERVER] running. Press /exit to stop.")
+    print("[SERVER] running. Type /exit to stop.")
 
     # interner "Server-Client"
-    admin_client = ChatClient("UsernameServer", host="127.0.0.1", port=51121)
+    admin_client = ChatClient("UsernameServer", host="127.0.0.1", port=DEFAULT_PORT)
     admin_client.connect()
 
     try:

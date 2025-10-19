@@ -3,6 +3,8 @@ import socket
 import threading
 import time
 
+from localchat.config.defaults import UDP_BROADCAST_PORT
+
 class TCPConnection:
 
     def __init__(self):
@@ -67,7 +69,7 @@ class TCPConnection:
 
 class UDPBroadcast:
 
-    def __init__(self, port=51111):
+    def __init__(self, port=UDP_BROADCAST_PORT):
         self.port = port
         self.sock = None
         self.alive = False

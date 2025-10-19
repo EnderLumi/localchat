@@ -23,8 +23,9 @@ localchat = "localchat.__main__:main"
 [tool.setuptools]
 include-package-data = true
 
-[tool.setuptools.exclude-package-data]
-"*" = ["*.cmd"]
+[tool.setuptools.packages.find]
+include = ["localchat*"]
+exclude = ["tests*", "Scripts*"]
 
 [project.urls]
 Homepage = "https://github.com/enderlumi/localchat"

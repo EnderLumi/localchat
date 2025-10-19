@@ -1,5 +1,5 @@
 [project]
-name = "localchat"
+name = "lanparty" #pypi-name
 version = "1.0.0"
 description = "Local chat via LAN"
 readme = "README.md"

@@ -1,6 +1,6 @@
 [project]
 name = "lanparty"
-version = "1.0.2"
+version = "1.0.3"
 description = "Local chat via LAN"
 authors = [
     {name="EnderLumi"},
@@ -13,12 +13,12 @@ dependencies = [
     "colorama>=0.4.6"
 ]
 
+[project.scripts]
+localchat = "localchat.__main__:main"
+
 [build-system]
 requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
-
-[project.scripts]
-localchat = "localchat.__main__:main"
 
 [tool.setuptools]
 include-package-data = true

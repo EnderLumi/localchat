@@ -1,7 +1,7 @@
 # UDP-Server_display
 # Sends regular UDP-Broadcasts to make the server visible on the LAN
-from localchat.core.network import UDPBroadcast
-from localchat.config.defaults import DISCOVERY_PORT
+from localcom.core.network import UDPBroadcast
+from localcom.config.defaults import DISCOVERY_PORT
 
 
 class ServerAnnouncer:
@@ -14,7 +14,7 @@ class ServerAnnouncer:
 
     def start(self):
         """Start broadcasting"""
-        msg = f"LOCALCHAT_SERVER:{self.name}"
+        msg = f"LOCALCOM_SERVER:{self.name}"
         self._broadcaster.broadcast(msg, interval=2.0)
 
 

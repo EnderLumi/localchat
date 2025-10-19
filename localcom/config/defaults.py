@@ -1,6 +1,6 @@
 # Ports, Pfade, Zeitlimits
 DEFAULT_HOST = "0.0.0.0"
-DEFAULT_USERNAME_FILE = "~/.localchat_user"
+DEFAULT_USERNAME_FILE = "~/.localcom_user"
 DEFAULT_PORT = 51121
 DISCOVERY_PORT = 51111
 UDP_BROADCAST_PORT = 51122

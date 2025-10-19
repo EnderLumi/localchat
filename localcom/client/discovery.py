@@ -1,6 +1,6 @@
-"""Receives UDP broadcasts and detects available LocalChat servers in the LAN"""
-from localchat.core.network import UDPBroadcast
-from localchat.config.defaults import DISCOVERY_PORT
+"""Receives UDP broadcasts and detects available localcom servers in the LAN"""
+from localcom.core.network import UDPBroadcast
+from localcom.config.defaults import DISCOVERY_PORT
 
 class ServerDiscovery:
 
@@ -13,7 +13,7 @@ class ServerDiscovery:
     def start(self):
         """Start listening to server announcements"""
         def on_broadcast(message, addr):
-            if message.startswith("LOCALCHAT_SERVER:"):
+            if message.startswith("LOCALCOM_SERVER:"):
                 name = message.split(":", 1)[1]
                 self.found_servers[addr[0]] = name
         self._listener.listen(on_broadcast)

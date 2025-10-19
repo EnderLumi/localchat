@@ -12,13 +12,13 @@
 # - broadcast(packet, exclude=None): Sends a message to all clients except the specified one
 # - stop(): Stops the server and closes all connections
 #
-# Run from the localchat dir with: "python3 -m localchat.server.server"
+# Run from the localcom dir with: "python3 -m localcom.server.server"
 
 
 import socket
 import threading
-from localchat.core.protocol import encode_packet, decode_packet, validate_packet
-from localchat.config.defaults import DEFAULT_PORT
+from localcom.core.protocol import encode_packet, decode_packet, validate_packet
+from localcom.config.defaults import DEFAULT_PORT
 
 class ChatServer:
 
@@ -127,7 +127,7 @@ class ChatServer:
 
 
 if __name__ == "__main__":
-    from localchat.client.client import ChatClient
+    from localcom.client.client import ChatClient
 
     server = ChatServer()
     server.start()

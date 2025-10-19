@@ -99,7 +99,6 @@ automatisch so etwas herrunterladen.
 
 
 
-
 Phase 1 – Fundament (unabhängig von Chatlogik)
 Ziel: stabile Basis, auf die du Client und Server setzen kannst.
 core/network.py

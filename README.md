@@ -3,11 +3,11 @@ just another stupid Lan Chat
 
 Bitte in Editor Format anschauen:
 
-localcom/
+localchat/
 │
-├─ localcom/
+├─ localchat/
 │   ├─ __init__.py
-│   ├─ __main__.py                # CLI-Einstiegspunkt für `localcom start`
+│   ├─ __main__.py                # CLI-Einstiegspunkt für `localchat start`
 │   │
 │   ├─ core/                      # Zentrale Logik, unabhängig von CLI
 │   │   ├─ __init__.py
@@ -59,7 +59,7 @@ localcom/
 
 Ablaufidee beim Start
 Nutzer tippt:
-localcom start
+localchat start
 __main__.py prüft lokale Konfigurationsdatei für Usernamen
 Client sendet UDP-Broadcast, fragt verfügbare Server ab
 Option eigenen Server starten (mit passwort) 
@@ -67,7 +67,7 @@ Option eigenen Server starten (mit passwort)
 
 Befehle:
 
-- localcom start				     soll das program starten (möglich über .whl oder so)
+- localchat start				     soll das program starten (möglich über .whl oder so)
 - /help							     Liste und Erklärung der Befehle
 - /msg [name, ..]				     privat Nachricht(en)
 - /join [servername]			     server beitreten
@@ -161,8 +161,8 @@ Standardisierte Logs für Fehler und Nachrichten.
 Phase 6 – Integration
 Ziel: Komplettes CLI-Tool.
 __main__.py
-Liest CLI-Argumente (localcom start, localcom test server).
+Liest CLI-Argumente (localchat start, localchat test server).
 Ruft Client oder Server je nach Modus auf.
 Verwendet argparse.
 pyproject.toml
-Definiere [project.scripts] localcom = "localcom.__main__:main".
+Definiere [project.scripts] localchat = "localchat.__main__:main".

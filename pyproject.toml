@@ -29,7 +29,7 @@ exclude = ["tests*", "Scripts*"]
 
 
 [project.optional-dependencies]
-fancy = ["prompt_toolkit"]
+plus = ["prompt_toolkit"]
 
 [project.urls]
 Homepage = "https://github.com/enderlumi/localchat"

@@ -27,10 +27,16 @@ def main():
         print(f"Your name is now: {username}")
 
     try:
-        import PromptSession
+        import promt_toolkit
         use_prompt_toolkit = True
     except ImportError:
         use_prompt_toolkit = False
+
+    if use_prompt_toolkit:
+        print("\nImproved terminal with prompt_toolkit enabled")
+    else:
+        print("\nprompt_toolkit not installed – simple input enabled")
+        print("[Optional] install prompt_toolkit with: pip3 install prompt_toolkit")
 
 
     print("\nScan for available servers on the local network...")
@@ -125,7 +131,6 @@ def chat_loop(client, use_prompt_toolkit):
         from prompt_toolkit.patch_stdout import patch_stdout
 
         session = PromptSession('> ')
-        print("Improved terminal with prompt_toolkit enabled")
         try:
             with patch_stdout():
                 while True:
@@ -136,8 +141,6 @@ def chat_loop(client, use_prompt_toolkit):
         except KeyboardInterrupt:
             pass
     else:
-        print("prompt_toolkit not installed – simple input enabled")
-        print("[Optional] install prompt_toolkit with: pip install prompt_toolkit")
         try:
             while True:
                 msg = input("> ")

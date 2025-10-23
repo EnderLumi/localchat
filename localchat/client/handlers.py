@@ -10,7 +10,7 @@ def dispatch_packet(packet, display_func):
 
 
 def handle_public(packet, display_func):
-    sender = packet.get('sender')
+    sender = packet.get('from')
     message = packet.get("payload", {}).get("message", "")
     display_func(f"{sender}: {message}")
 

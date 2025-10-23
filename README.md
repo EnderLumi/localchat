@@ -172,3 +172,8 @@ Ruft Client oder Server je nach Modus auf.
 Verwendet argparse.
 pyproject.toml
 Definiere [project.scripts] localchat = "localchat.__main__:main".
+
+
+This application optionally uses 'prompt_toolkit' (BSD License)
+for improved interactive terminal input.
+See https://github.com/prompt-toolkit/python-prompt-toolkit for details.

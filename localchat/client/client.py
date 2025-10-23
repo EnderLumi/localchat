@@ -18,6 +18,8 @@
 
 import socket
 import threading
+
+from localchat.client.handlers import dispatch_packet
 from localchat.core.protocol import make_packet, encode_packet, decode_packet, validate_packet
 
 class ChatClient:
@@ -94,6 +96,10 @@ class ChatClient:
 
     def _handle_packet(self, packet: dict):
         """Displays messages in the terminal"""
+
+        dispatch_packet(packet, print)
+
+        """
         ptype = packet.get("type")
         sender = packet.get("from")
         payload = packet.get("payload", {})
@@ -102,7 +108,7 @@ class ChatClient:
             print(f"{sender}: {payload.get('message', '')}")
         elif ptype == "system":
             print(f"[SYSTEM] {payload.get('message', '')}")
-
+        """
 
     def close(self):
         """ends the connection"""

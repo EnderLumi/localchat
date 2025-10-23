@@ -3,7 +3,6 @@
 # Run with: localchat start   or    from the right dir with: python3 -m localchat
 
 import sys
-import time
 
 from localchat.core.storage import get_user_name, set_user_name
 from localchat.client.client import ChatClient
@@ -26,6 +25,13 @@ def main():
             set_user_name(new_name)
             username = new_name
         print(f"Your name is now: {username}")
+
+    try:
+        import PromptSession
+        use_prompt_toolkit = True
+    except ImportError:
+        use_prompt_toolkit = False
+
 
     print("\nScan for available servers on the local network...")
     discovery = ServerDiscovery()
@@ -70,21 +76,12 @@ def main():
         # Host joins as a client itself
         client = ChatClient(username)
         client.connect()
-
-        try:
-            while True:
-                msg = input()
-                if msg.lower() in ("/exit", "/quit", "/leave", "/close"):
-                    break
-                client.send_message(msg)
-        except KeyboardInterrupt:
-            pass
-        finally:
-            client.close()
-            #announcer.stop()
-            responder.stop()
-            server.stop()
-            print("\n[SERVER] Closed.")
+        chat_loop(client, use_prompt_toolkit)
+        client.close()
+        #announcer.stop()
+        responder.stop()
+        server.stop()
+        print("\n[SERVER] Closed.")
 
 
     # joins Server via IP
@@ -96,17 +93,8 @@ def main():
         client.connect()
         print(f"Connected with {host}:{port}")
         print("Type /exit to stop.")
-
-        try:
-            while True:
-                msg = input()
-                if msg.lower() in ("/exit", "/quit", "/leave", "/close"):
-                    break
-                client.send_message(msg)
-        except KeyboardInterrupt:
-            pass
-        finally:
-            client.close()
+        chat_loop(client, use_prompt_toolkit)
+        client.close()
 
 
     # joins Server via [number]
@@ -116,20 +104,12 @@ def main():
             if 0 <= index < len(servers):
                 name, addr = servers[index]
                 port = DEFAULT_PORT
-                print(f"Connecting to {name} ({addr}) ...")
                 client = ChatClient(username, host = addr, port = port)
                 client.connect()
-
-                try:
-                    while True:
-                        msg = input()
-                        if msg.lower() in ("/exit", "/quit", "/leave", "/close"):
-                            break
-                        client.send_message(msg)
-                except KeyboardInterrupt:
-                    pass
-                finally:
-                    client.close()
+                print(f"Connecting to {name} ({addr}) ...")
+                print("Type /exit to stop.")
+                chat_loop(client, use_prompt_toolkit)
+                client.close()
             else:
                 print("Invalid choice.")
         except ValueError:
@@ -137,6 +117,36 @@ def main():
 
     else:
         print("Invalid choice.")
+
+
+def chat_loop(client, use_prompt_toolkit):
+    if use_prompt_toolkit:
+        from prompt_toolkit import PromptSession
+        from prompt_toolkit.patch_stdout import patch_stdout
+
+        session = PromptSession('> ')
+        print("Improved terminal with prompt_toolkit enabled")
+        try:
+            with patch_stdout():
+                while True:
+                    msg = session.prompt()
+                    if msg.lower() in ("/exit", "/quit", "/leave", "/close"):
+                        break
+                    client.send_message(msg)
+        except KeyboardInterrupt:
+            pass
+    else:
+        print("prompt_toolkit not installed – simple input enabled")
+        print("[Optional] install prompt_toolkit with: pip install prompt_toolkit")
+        try:
+            while True:
+                msg = input("> ")
+                if msg.lower() in ("/exit", "/quit", "/leave", "/close"):
+                    break
+                client.send_message(msg)
+        except KeyboardInterrupt:
+            pass
+
 
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "start":

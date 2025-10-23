@@ -1,6 +1,6 @@
 [project]
 name = "lanparty"
-version = "1.0.5"
+version = "1.0.6"
 description = "Local chat via LAN"
 authors = [
     {name="EnderLumi"},
@@ -26,6 +26,10 @@ include-package-data = true
 [tool.setuptools.packages.find]
 include = ["localchat*"]
 exclude = ["tests*", "Scripts*"]
+
+
+[project.optional-dependencies]
+fancy = ["prompt_toolkit"]
 
 [project.urls]
 Homepage = "https://github.com/enderlumi/localchat"

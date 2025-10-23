@@ -8,8 +8,10 @@ import time
 from localchat.core.storage import get_user_name, set_user_name
 from localchat.client.client import ChatClient
 from localchat.client.discovery import ServerDiscovery
+from localchat.server.broadcast import ServerResponder
 from localchat.server.server import ChatServer
-from localchat.server.broadcast import ServerAnnouncer
+#from localchat.server.broadcast import ServerAnnouncer
+
 from localchat.config.defaults import DEFAULT_PORT
 
 
@@ -27,9 +29,10 @@ def main():
 
     print("\nScan for available servers on the local network...")
     discovery = ServerDiscovery()
-    discovery.start()
-    time.sleep(2.5)
-    discovery.stop()
+    #discovery.start()
+    #time.sleep(2.5)
+    #discovery.stop()
+    discovery.scan()
     servers = discovery.list_servers()
 
     if servers:
@@ -55,8 +58,11 @@ def main():
         server = ChatServer(port = DEFAULT_PORT)
         server.start()
 
-        announcer = ServerAnnouncer(name = server_name)
-        announcer.start()
+        responder = ServerResponder(name = server_name)
+        responder.start()
+
+        #announcer = ServerAnnouncer(name = server_name)
+        #announcer.start()
 
         print(f"Server '{server_name}' is running. Clients can now join")
         print("Type /exit to stop.")
@@ -75,7 +81,8 @@ def main():
             pass
         finally:
             client.close()
-            announcer.stop()
+            #announcer.stop()
+            responder.stop()
             server.stop()
             print("\n[SERVER] Closed.")
 

@@ -4,7 +4,7 @@ version = "1.0.3"
 description = "Local chat via LAN"
 authors = [
     {name="EnderLumi"},
-    {name="Leon"}
+    {name="Leon131211"}
 ]
 license = {text = "GPL-3.0"}
 readme = "README.md"

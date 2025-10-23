@@ -47,6 +47,12 @@ localchat/
 │   ├─ test_server.py
 │   └─ test_protocol.py
 │
+├─ installer_windows.py
+│
+├─ setup.py
+│
+├─ setup.cfg
+│
 ├─ scripts/                       # Entwicklungs- oder Wartungsskripte
 │   ├─ build_wheel.sh
 │   └─ run_local.sh

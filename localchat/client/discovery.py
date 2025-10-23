@@ -38,7 +38,7 @@ class ServerDiscovery:
     def __init__(self, port=DISCOVERY_PORT, timeout=2.0):
         self.port = port
         self.timeout = timeout
-        self.found_servers = {}  # addr -> name
+        self.found_servers = {}
 
     def scan(self):
         """Broadcasts a discovery request and listens for responses"""
@@ -48,7 +48,7 @@ class ServerDiscovery:
         sock.settimeout(self.timeout)
 
         # Send discovery message
-        message = "DISCOVER_LOCALCHAT_SERVER".encode("utf-8")
+        message = "DISCOVERY_LOCALCHAT_SERVER".encode("utf-8")
         sock.sendto(message, ("255.255.255.255", self.port))
 
         # Collect responses

@@ -27,7 +27,7 @@ def main():
         print(f"Your name is now: {username}")
 
     try:
-        import promt_toolkit
+        import prompt_toolkit
         use_prompt_toolkit = True
     except ImportError:
         use_prompt_toolkit = False
@@ -143,7 +143,7 @@ def chat_loop(client, use_prompt_toolkit):
     else:
         try:
             while True:
-                msg = input("> ")
+                msg = input()
                 if msg.lower() in ("/exit", "/quit", "/leave", "/close"):
                     break
                 client.send_message(msg)

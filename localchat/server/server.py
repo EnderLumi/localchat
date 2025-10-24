@@ -17,6 +17,7 @@
 
 import socket
 import threading
+from localchat.server.session import ClientSessionManager
 from localchat.core.protocol import encode_packet, decode_packet, validate_packet
 from localchat.config.defaults import DEFAULT_PORT
 
@@ -26,9 +27,10 @@ class ChatServer:
         self.host = host
         self.port = port
         self.sock = None
-        self.clients = {}
+        self.session = ClientSessionManager()
+        #self.clients = {}
         self.alive = False
-        self.lock = threading.Lock()
+        #self.lock = threading.Lock()
 
 
     def start(self):
@@ -48,9 +50,7 @@ class ChatServer:
         while self.alive:
             try:
                 conn, addr = self.sock.accept()
-                with self.lock:
-                    self.clients[addr] = conn
-                print(f"[SERVER] new client {addr}")
+                self.session.add(addr, conn)
                 threading.Thread(target=self._client_loop, args=(conn, addr), daemon=True).start()
             except OSError:
                 break
@@ -65,26 +65,23 @@ class ChatServer:
             self._send_packet(conn, welcome_packet)
 
             while self.alive:
-                try:
-                    data = conn.recv(4096)
-                    if not data:
-                        break
-                    buffer += data
-                    while b"\n" in buffer:
-                        packet_bytes, buffer = buffer.split(b"\n", 1)
-                        try:
-                            packet = decode_packet(packet_bytes)
-                            if not validate_packet(packet):
-                                continue
-                            self.broadcast(packet, exclude=addr)
-                        except Exception as e:
-                            print(f"[SERVER] decode error: {e}")
-                except OSError:
+                data = conn.recv(4096)
+                if not data:
                     break
+                buffer += data
+                while b"\n" in buffer:
+                    packet_bytes, buffer = buffer.split(b"\n", 1)
+                    try:
+                        packet = decode_packet(packet_bytes)
+                        if not validate_packet(packet):
+                            continue
+                        self.broadcast(packet, exclude=addr)
+                    except Exception as e:
+                        print(f"[SERVER] decode error: {e}")
+
         finally:
             print(f"[SERVER] Client disconnected: {addr}")
-            with self.lock:
-                self.clients.pop(addr, None)
+            self.session.remove(addr)
             conn.close()
 
 
@@ -96,6 +93,10 @@ class ChatServer:
 
     def broadcast(self, packet: dict, exclude=None):
         """Sends a packet to all connected clients"""
+        raw = encode_packet(packet) + b"\n"
+        self.session.broadcast(raw, exclude=exclude)
+
+        """
         #raw = encode_packet(packet)
         with self.lock:
             for addr, conn in list(self.clients.items()):
@@ -106,10 +107,21 @@ class ChatServer:
                 except OSError:
                     conn.close()
                     self.clients.pop(addr, None)
+        """
 
 
     def stop(self):
         """Shut down the server and close all connections"""
+        self.alive = False
+        self.session.close_all()
+        if self.sock:
+            try:
+                self.sock.close()
+            except OSError:
+                pass
+        print("[SERVER] stopped")
+
+        """
         self.alive = False
         with self.lock:
             for conn in list(self.clients.values()):
@@ -124,7 +136,7 @@ class ChatServer:
             except OSError:
                 pass
         print("[SERVER] stopped")
-
+        """
 """
 if __name__ == "__main__":
     from localchat.client.client import ChatClient

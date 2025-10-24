@@ -14,7 +14,7 @@ class ClientSessionManager:
 
     def remove(self, addr):
         with self._lock:
-            del self._clients.pop[addr]
+            self._clients.pop(addr, None)
 
     def list(self):
         with self._lock:

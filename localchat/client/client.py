@@ -96,19 +96,8 @@ class ChatClient:
 
     def _handle_packet(self, packet: dict):
         """Displays messages in the terminal"""
-
         dispatch_packet(packet, print)
 
-        """
-        ptype = packet.get("type")
-        sender = packet.get("from")
-        payload = packet.get("payload", {})
-
-        if ptype == "public":
-            print(f"{sender}: {payload.get('message', '')}")
-        elif ptype == "system":
-            print(f"[SYSTEM] {payload.get('message', '')}")
-        """
 
     def close(self):
         """ends the connection"""
@@ -121,20 +110,3 @@ class ChatClient:
             except OSError:
                 pass
         print(f"[CLIENT] {self.username} disconnected")
-
-
-if __name__ == "__main__":
-    client = ChatClient("Username", host="127.0.0.1", port=51121)
-    client.connect()
-    print("[CLIENT] Connected to server. Press /exit to stop.")
-
-    try:
-        while True:
-            msg = input()
-            if msg.lower() in ("/exit", "/quit","/leave"):
-                break
-            client.send_message(msg)
-    except KeyboardInterrupt:
-        pass
-    finally:
-        client.close()

@@ -125,7 +125,7 @@ class ChatServer:
                 pass
         print("[SERVER] stopped")
 
-
+"""
 if __name__ == "__main__":
     from localchat.client.client import ChatClient
 
@@ -151,4 +151,5 @@ if __name__ == "__main__":
         admin_client.close()
         server.stop()
         print("[SERVER] stopped")
+"""
 

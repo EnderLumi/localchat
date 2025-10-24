@@ -4,6 +4,7 @@
 
 import sys
 
+from localchat.client.interface import ChatInterface
 from localchat.core.storage import get_user_name, set_user_name
 from localchat.client.client import ChatClient
 from localchat.client.discovery import ServerDiscovery
@@ -31,12 +32,8 @@ def main():
         use_prompt_toolkit = True
     except ImportError:
         use_prompt_toolkit = False
-
-    if use_prompt_toolkit:
-        print("\nImproved terminal with prompt_toolkit enabled")
-    else:
-        print("\nprompt_toolkit not installed – simple input enabled")
-        print("[Optional] install prompt_toolkit with: pip3 install prompt_toolkit")
+        print("\n[Info] prompt_toolkit not installed –> using simple interface")
+        print("       (Optional) Install with: pip3 install prompt_toolkit")
 
 
     print("\nScan for available servers on the local network...")
@@ -48,7 +45,7 @@ def main():
     servers = discovery.list_servers()
 
     if servers:
-        print("\nFound servers:")
+        print("\nAvailable servers:")
         for i, (name, addr) in enumerate(servers, start=1):
             print(f"[{i}] {name} ({addr})")
     else:
@@ -82,7 +79,12 @@ def main():
         # Host joins as a client itself
         client = ChatClient(username)
         client.connect()
-        chat_loop(client, use_prompt_toolkit)
+
+        ui = ChatInterface(client, use_prompt_toolkit)
+        ui.start()
+
+        #chat_loop(client, use_prompt_toolkit)
+
         client.close()
         #announcer.stop()
         responder.stop()
@@ -94,12 +96,16 @@ def main():
     elif choice == "z":
         host = input("IP address: ").strip() or "127.0.0.1"
         port = DEFAULT_PORT
+        print(f"Connected with {host}:{port}")
+        print("Type /exit to stop.")
 
         client = ChatClient(username, host = host, port = port)
         client.connect()
-        print(f"Connected with {host}:{port}")
-        print("Type /exit to stop.")
-        chat_loop(client, use_prompt_toolkit)
+
+        ui = ChatInterface(client, use_prompt_toolkit)
+        ui.start()
+
+        #chat_loop(client, use_prompt_toolkit)
         client.close()
 
 
@@ -110,11 +116,16 @@ def main():
             if 0 <= index < len(servers):
                 name, addr = servers[index]
                 port = DEFAULT_PORT
-                client = ChatClient(username, host = addr, port = port)
-                client.connect()
                 print(f"Connecting to {name} ({addr}) ...")
                 print("Type /exit to stop.")
-                chat_loop(client, use_prompt_toolkit)
+
+                client = ChatClient(username, host = addr, port = port)
+                client.connect()
+
+                ui = ChatInterface(client, use_prompt_toolkit)
+                ui.start()
+
+                #chat_loop(client, use_prompt_toolkit)
                 client.close()
             else:
                 print("Invalid choice.")
@@ -124,7 +135,7 @@ def main():
     else:
         print("Invalid choice.")
 
-
+"""
 def chat_loop(client, use_prompt_toolkit):
     if use_prompt_toolkit:
         from prompt_toolkit import PromptSession
@@ -149,7 +160,7 @@ def chat_loop(client, use_prompt_toolkit):
                 client.send_message(msg)
         except KeyboardInterrupt:
             pass
-
+"""
 
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "start":

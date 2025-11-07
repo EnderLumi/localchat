@@ -4,7 +4,8 @@
 
 import sys
 
-from localchat.client.interface import ChatInterface
+from localchat.client.client_interface import ChatInterface
+from localchat.server.server_interface import ServerInterface
 from localchat.core.storage import get_user_name, set_user_name
 from localchat.client.client import ChatClient
 from localchat.client.discovery import ServerDiscovery
@@ -80,8 +81,12 @@ def main():
         client = ChatClient(username)
         client.connect()
 
-        ui = ChatInterface(client, use_prompt_toolkit)
+        ui = ServerInterface(client, use_prompt_toolkit)
         ui.start()
+
+        # (I want to change it to a server_interface)
+        #ui = ChatInterface(client, use_prompt_toolkit)
+        #ui.start()
 
         #chat_loop(client, use_prompt_toolkit)
 
@@ -102,7 +107,7 @@ def main():
         client = ChatClient(username, host = host, port = port)
         client.connect()
 
-        ui = ChatInterface(client, use_prompt_toolkit)
+        ui = ServerInterface(client, use_prompt_toolkit)
         ui.start()
 
         #chat_loop(client, use_prompt_toolkit)

@@ -102,7 +102,7 @@ class ChatClient:
     def close(self):
         """ends the connection"""
         if not self.alive:
-            return
+            return "already closed"
         self.alive = False
         if self.sock:
             try:

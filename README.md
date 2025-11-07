@@ -103,7 +103,13 @@ mit: pip install prompt_toolkit
 könnte man ja user optional fragen, ob sie dieses feature haben wollen, weil sie wollen evlt nicht das wir einfach so
 automatisch so etwas herrunterladen.
 
+curses python bibliothek
+Um Fenster cooler da zu stellen.
 
+Minigames
+tiktaktoo
+schnickschnakschnuk
+schiffe versenken
 
 Phase 1 – Fundament (unabhängig von Chatlogik)
 Ziel: stabile Basis, auf die du Client und Server setzen kannst.

@@ -42,7 +42,6 @@ def make_packet(packet_type, sender, payload, **kwargs):
 
 
 def encode_packet(packet):
-    # dict -> UTF-8 bytes
     if not isinstance(packet, dict):
         raise TypeError("packet must be a dict")
     try:
@@ -53,7 +52,6 @@ def encode_packet(packet):
 
 
 def decode_packet(raw):
-    # bytes -> dict
     if not isinstance(raw, (bytes, bytearray)):
         raise TypeError("raw must be a bytes or bytearray")
     try:

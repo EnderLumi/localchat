@@ -20,6 +20,7 @@ import threading
 from localchat.server.session import ClientSessionManager
 from localchat.core.protocol import encode_packet, decode_packet, validate_packet
 from localchat.config.defaults import DEFAULT_PORT
+from localchat.server.commands import ServerCommandHandler
 
 class ChatServer:
 
@@ -27,10 +28,13 @@ class ChatServer:
         self.host = host
         self.port = port
         self.sock = None
-        self.session = ClientSessionManager()
+        self.sessions = ClientSessionManager()
         #self.clients = {}
         self.alive = False
         #self.lock = threading.Lock()
+        #self.commands = ServerCommandHandler(self)
+        #threading.Thread(target=self._admin_console, daemon=True).start()
+
 
 
     def start(self):
@@ -39,10 +43,11 @@ class ChatServer:
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.bind((self.host, self.port))
         self.sock.listen(5)
+        self.commands = ServerCommandHandler(self)
         self.alive = True
-        print(f"[SERVER] running on {self.host}:{self.port}")
-
+        #threading.Thread(target=self._admin_console, daemon=True).start()
         threading.Thread(target=self._accept_loop, daemon=True).start()
+        print(f"[SERVER] running on {self.host}:{self.port}")
 
 
     def _accept_loop(self):
@@ -50,7 +55,7 @@ class ChatServer:
         while self.alive:
             try:
                 conn, addr = self.sock.accept()
-                self.session.add(addr, conn)
+                self.sessions.add(addr, conn)
                 threading.Thread(target=self._client_loop, args=(conn, addr), daemon=True).start()
             except OSError:
                 break
@@ -81,7 +86,7 @@ class ChatServer:
 
         finally:
             print(f"[SERVER] Client disconnected: {addr}")
-            self.session.remove(addr)
+            self.sessions.remove(addr)
             conn.close()
 
 
@@ -94,7 +99,7 @@ class ChatServer:
     def broadcast(self, packet: dict, exclude=None):
         """Sends a packet to all connected clients"""
         raw = encode_packet(packet) + b"\n"
-        self.session.broadcast(raw, exclude=exclude)
+        self.sessions.broadcast(raw, exclude=exclude)
 
         """
         #raw = encode_packet(packet)
@@ -113,7 +118,7 @@ class ChatServer:
     def stop(self):
         """Shut down the server and close all connections"""
         self.alive = False
-        self.session.close_all()
+        self.sessions.close_all()
         if self.sock:
             try:
                 self.sock.close()
@@ -137,6 +142,23 @@ class ChatServer:
                 pass
         print("[SERVER] stopped")
         """
+
+    """
+    def _admin_console(self):
+        #allows the host to type in admin commands
+        while self.alive:
+            try:
+                line = input().strip()
+                if not line:
+                    continue
+                if self.commands.handle(line):
+                    if not self.alive:
+                        break
+            except KeyboardInterrupt:
+                self.stop()
+                break
+    """
+
 """
 if __name__ == "__main__":
     from localchat.client.client import ChatClient

@@ -86,7 +86,7 @@ Befehle:
 - /test server						 Lokaler Testserver (nicht broadcasten)
 - /send file [path/to/file]			 Datein senden
 - /save chat [filename]				 speichert chatverlauf
-- /ping [name/server]				 misst Latenz 
+- /ping [name/server]				 misst Latenz (ohne weitere Angaben, wird der server host gepingt)
 - /version							 zeigt Programmversion 
 - /uptime							 zeigt Laufzeit des Servers 
 - /broadcast 						 Nachricht an alle user im Netzwerk
@@ -94,6 +94,8 @@ Befehle:
 - /new Passwort					     Neues Passwort für den server setzen (only Host)
 - /kick [name]						 entfernt Nutzer (only Host)
 - /whoami							 zeigt Name, Farbe, Ip, etc an
+- /game <gamename> <opponent>        minigames anfragen
+- /gameaccept <challenger>           minigames akzeptieren
 
 
 
@@ -105,11 +107,17 @@ automatisch so etwas herrunterladen.
 
 curses python bibliothek
 Um Fenster cooler da zu stellen.
+Und man könnte damit brauchte man evlt kein promt_toolkit mehr. Zudem ist es schon Python standard bibliothek. Allerdings könnte es sein, da
 
-Minigames
-tiktaktoo
-schnickschnakschnuk
-schiffe versenken
+Command system überarbeiten, das ist grotten schlecht aktuell. wir brauchen einen zentralen command Ort.
+
+Minigames:
+tictactoe                   tik tak toe
+rockpaperscissors           schere stein papier
+battleship                  schiffe versenken
+hangman                     galgenmännchen
+connectfour                 4 gewinnt
+Categories                  stadt, land, fluss
 
 Phase 1 – Fundament (unabhängig von Chatlogik)
 Ziel: stabile Basis, auf die du Client und Server setzen kannst.
@@ -170,16 +178,15 @@ Passwortprüfung, Hashing.
 Später TLS/Encryption optional.
 logging/logger.py
 Standardisierte Logs für Fehler und Nachrichten.
+
 Phase 6 – Integration
 Ziel: Komplettes CLI-Tool.
 __main__.py
 Liest CLI-Argumente (localchat start, localchat test server).
-Ruft Client oder Server je nach Modus auf.
 Verwendet argparse.
 pyproject.toml
 Definiere [project.scripts] localchat = "localchat.__main__:main".
 
 
-This application optionally uses 'prompt_toolkit' (BSD License)
-for improved interactive terminal input.
+This application optionally uses 'prompt_toolkit'(BSD License) for improved interactive terminal input.
 See https://github.com/prompt-toolkit/python-prompt-toolkit for details.

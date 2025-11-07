@@ -73,7 +73,7 @@ Option eigenen Server starten (mit passwort)
 
 Befehle:
 
-- localchat start				     soll das program starten (möglich über .whl oder so)
+- localchat start				     soll das program starten (möglich über .whl oder so)   ✅
 - /help							     Liste und Erklärung der Befehle
 - /msg [name, ..]				     privat Nachricht(en)
 - /join [servername]			     server beitreten
@@ -84,7 +84,7 @@ Befehle:
 - /rename							 Name ändern (alle 7 Tage)
 - /info [name/servername]			 metadaten wie ip, Port und ehemalige Namen
 - /test server						 Lokaler Testserver (nicht broadcasten)
-- /send file [path/to/file]			 Datein senden
+- /send file [path/to/file]			 Datein senden (automatic path with drag and drop)
 - /save chat [filename]				 speichert chatverlauf
 - /ping [name/server]				 misst Latenz (ohne weitere Angaben, wird der server host gepingt)
 - /version							 zeigt Programmversion 
@@ -98,7 +98,6 @@ Befehle:
 - /gameaccept <challenger>           minigames akzeptieren
 
 
-
 Namensfarben und auch Text autocomplet für z.B. [/msg Ma] und der schlägt schon vor [/msg Maximilian] mit Tap bestätigen
 das geht über promt_toolkit
 mit: pip install prompt_toolkit
@@ -107,17 +106,20 @@ automatisch so etwas herrunterladen.
 
 curses python bibliothek
 Um Fenster cooler da zu stellen.
-Und man könnte damit brauchte man evlt kein promt_toolkit mehr. Zudem ist es schon Python standard bibliothek. Allerdings könnte es sein, da
+Und man könnte damit brauchte man evlt kein promt_toolkit mehr. Zudem ist es schon Python standard bibliothek.
+Allerdings könnte es sein, dass man das autocomplete damit nicht implementieren kann.
 
 Command system überarbeiten, das ist grotten schlecht aktuell. wir brauchen einen zentralen command Ort.
 
 Minigames:
-tictactoe                   tik tak toe
-rockpaperscissors           schere stein papier
-battleship                  schiffe versenken
-hangman                     galgenmännchen
-connectfour                 4 gewinnt
-Categories                  stadt, land, fluss
+tictactoe                           tik tak toe
+rockpaperscissors                   schere stein papier
+battleship                          schiffe versenken
+hangman                             galgenmännchen
+connectfour                         4 gewinnt
+Cctegories                          stadt, land, fluss
+highestnumber                       genneriert zufällige zahl zwischen 1 und 100000000
+headortails                         Kopf oder Zahl
 
 Phase 1 – Fundament (unabhängig von Chatlogik)
 Ziel: stabile Basis, auf die du Client und Server setzen kannst.
@@ -142,8 +144,6 @@ Startet TCP-Listener.
 Akzeptiert Clients, verwaltet aktive Verbindungen.
 Sendet eingehende Nachrichten an alle verbundenen Clients.
 server/broadcast.py
-Regelmäßige UDP-Broadcasts mit Servername + Port.
-Antwortet auf Discovery-Anfragen von Clients.
 server/session.py
 Verwaltung der verbundenen Nutzer (Name, IP, Farbe).
 Methoden: add_user(), remove_user(), get_user_by_name().

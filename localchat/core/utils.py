@@ -1,6 +1,6 @@
 # Hilfsfunktionen, Farben, Zeitstempel
 
-from typing import Any, TypeVar, Generic, Self #, Callable
+from typing import Any, TypeVar, Generic, Self
 from threading import Lock, RLock
 from collections.abc import Callable
 
@@ -12,12 +12,24 @@ class _UndefinedValue:
 _UndefinedValue.INSTANCE =  _UndefinedValue()
 
 class Lazy(Generic[T]):
+    """
+    Non-reassignable, non-threadsave lazy.
+    Streamlines the use of lazy evaluation, meaning,
+    that values are only fetched or calculated as soon as they
+    are needed.
+    """
     def __new__(cls, supplier : Callable[[],T]|None = None, /, value : T|_UndefinedValue = _UndefinedValue.INSTANCE) -> Self:
         self = LazyImpl._create_new()
         return self # type: ignore
     def get(self) -> T: ...
 
 class MutableLazy(Lazy[T]):
+    """
+    Reassignable, non-threadsave lazy.
+    Streamlines the use of lazy evaluation, meaning,
+    that values are only fetched or calculated as soon as they
+    are needed.
+    """
     def __new__(cls, supplier : Callable[[],T]|None = None, /, value : T|_UndefinedValue = _UndefinedValue.INSTANCE) -> Self:
         self = MutableLazyImpl._create_new()
         return self # type: ignore
@@ -25,11 +37,23 @@ class MutableLazy(Lazy[T]):
     def set_supplier(self, supplier : Callable[[],T]): ...
 
 class ConcurrentLazy(Lazy[T]):
+    """
+    Non-reassignable, threadsave lazy.
+    Streamlines the use of lazy evaluation, meaning,
+    that values are only fetched or calculated as soon as they
+    are needed.
+    """
     def __new__(cls, supplier : Callable[[],T]|None = None, /, value : T|_UndefinedValue = _UndefinedValue.INSTANCE) -> Self:
         self = ConcurrentLazyImpl._create_new()
         return self # type: ignore
 
 class MutableConcurrentLazy(ConcurrentLazy[T],MutableLazy[T]):
+    """
+    Reassignable, threadsave lazy.
+    Streamlines the use of lazy evaluation, meaning,
+    that values are only fetched or calculated as soon as they
+    are needed.
+    """
     def __new__(cls, supplier : Callable[[],T]|None = None, /, value : T|_UndefinedValue = _UndefinedValue.INSTANCE) -> Self:
         self = MutableConcurrentLazyImpl._create_new()
         return self # type: ignore

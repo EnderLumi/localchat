@@ -1,6 +1,11 @@
 
 import ipaddress
 
+# Bin noch unzufrieden damit wie ich die 'Logic'-Schnittstelle gemacht habe.
+# Fühlt sich zu sehr nach C und zu wenig nach Python an.
+# Die User, der Chat usw. sollten abstrakte Objecte sein die im, die
+# 'Logic'-Schnittstelle implementierenden, Code implementiert werden.
+
 class Logic:
     def __init__(self): ...
 

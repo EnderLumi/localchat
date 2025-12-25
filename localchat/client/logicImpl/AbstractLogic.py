@@ -1,7 +1,7 @@
 
 import threading
-from logic import Logic
-from UI import UI
+from ..logic import Logic
+from ..UI import UI
 
 class AbstractLogic(Logic):
     def __init__(self):

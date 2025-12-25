@@ -1,6 +1,6 @@
 
-from UI import UI
-from logic import Logic
+from ..UI import UI
+from ..logic import Logic
 
 class AbstractUI(UI):
     def __init__(self):

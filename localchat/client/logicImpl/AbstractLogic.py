@@ -65,7 +65,7 @@ class AbstractLogic(Logic):
             if self._state == _STOPPING or self._state == _STOPPED: return
             if self._state != _RUNNING:
                 raise RuntimeError('expected state: RUNNING')
-            self._state = _STOPPED
+            self._state = _STOPPING
 
             self.ui.shutdown()
             self.shutdown_impl()

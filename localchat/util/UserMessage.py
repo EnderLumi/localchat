@@ -1,0 +1,6 @@
+from localchat.util import User
+
+
+class UserMessage:
+    def sender(self) -> User: ...
+    def message(self) -> str: ...

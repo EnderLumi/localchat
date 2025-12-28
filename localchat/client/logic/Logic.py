@@ -1,43 +1,69 @@
+from localchat.util import Chat, ChatInformation
+from io import RawIOBase
 
-import ipaddress
-
-# Bin noch unzufrieden damit wie ich die 'Logic'-Schnittstelle gemacht habe.
-# Fühlt sich zu sehr nach C und zu wenig nach Python an.
-# Die User, der Chat usw. sollten abstrakte Objecte sein die im, die
-# 'Logic'-Schnittstelle implementierenden, Code implementiert werden.
 
 class Logic:
     def __init__(self): ...
 
-    def getUserName(self, userID : int) -> str:
-        "The name of a user."
-    def getUserIPAddress(self, userID : int) -> ipaddress.IPv4Address | ipaddress.IPv6Address:
-        "Get a users IP address."
-    def getMyUserID(self) -> int:
-        "The userID that represents the local user."
-    def getClientApplicationUserID(self) -> int:
-        "The user ID that represent the client application."
-    def getServerUserID(self) -> int:
-        "The servers' user ID"
-    def listServers(self) -> list[int]:
-        "A list with the IDs of all available servers."
-    def getServerName(self, serverID : int) -> str:
-        "The name of a server."
-    def joinServer(self, serverID : int, myUserName : str) -> bool:
-        "Join a server."
-    def leaveServer(self):
-        "Leave the current server."
-    def sendMessage(self, body : str):
-        "Send a message."
-    def sendPrivateMessage(self, userID : int, body : str):
-        "Send a message only visable to one user."
-    def saveChatToFile(self, directory : str|None, filename : str|None) -> bool:
-        "Save the current chat to a file."
-    def loadChatFromFile(self, path : str) -> bool:
-        "Load a chat from a file."
-    def createServer(self, public : bool):
-        "Create a new server."
-    def runClientCommand(self, command : str):
-        "Runs a command to the local client application."
-    def runServerCommand(self, command : str):
-        "Sends a command to the server and runs it."
+    def start(self):
+        """
+        Start the localchat client logic.
+        Doesn't return until the localchat client
+        terminates.
+        Must be called with the main thread.
+        :return:
+        :raises RuntimeError: if logic was already started
+        """
+    def shutdown(self):
+        """
+        Terminates the localchat client logic.
+        :return:
+        :raises RuntimeError: if logic has not been started or was already terminated
+        """
+
+    def set_ui(self, ui : object):
+        """
+        Sets the UI that is used for the localchat client.
+        The UI must not have been started.
+        :param ui:
+        :return:
+        :raises RuntimeError: if logic was already started
+        """
+    def ui_initialized(self):
+        """
+        Signals to the localchat client logic that the UI has been initialized.
+        Must be called by the localchat client ui.
+        :return:
+        :raises RuntimeError: if logic has not been started
+        """
+
+    def create_chat(self, info: ChatInformation, online : bool, port: int) -> Chat:
+        """
+        Creates a new chat.
+        :param info:
+        :param online:
+        :param port:
+        :return:
+        :raises Error: if an error occurs while creating the chat
+        """
+    def load_chat(self, input_stream: RawIOBase, online : bool, port: int) -> Chat:
+        """
+        Loads a chat from a stream.
+        :param input_stream:
+        :param online:
+        :param port:
+        :return:
+        :raises Error: if an error occurs while loading the chat
+        """
+    def search_server(self) -> list[Chat]:
+        """
+        Searches for chat servers.
+        :return:
+        :raises Error: if an error occurs while searching for servers
+        """
+    def get_system_chat(self) -> Chat:
+        """
+        Returns a chat where messages by the localchat client application are posted and where
+        commands to the localchat client logic can be sent.
+        :return:
+        """

@@ -71,6 +71,15 @@ class Chat:
         :raises NotImplementedError: if this function is not implemented
         """
 
+    def get_server_user(self) -> User:
+        """
+        Returns the user that represents the chat server itself.
+        This 'user' posts server notifications.
+        Sending a private message to this 'user' causes
+        the message to be interpreted as a command by the server.
+        :return:
+        """
+
     def on_user_joined(self) -> EventHandler[User]: ...
     def on_user_left(self) -> EventHandler[User]: ...
     def on_user_became_host(self) -> EventHandler[User]: ...

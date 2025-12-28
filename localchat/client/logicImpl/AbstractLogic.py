@@ -55,7 +55,7 @@ class AbstractLogic(Logic):
             # The ui is executed by the current thread,
             # because many GUI libraries require the
             # calling thread to be the main thread.
-            self.ui.start()
+        self.ui.start()
 
     @final
     def shutdown(self):

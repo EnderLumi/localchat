@@ -1,6 +1,6 @@
 from localchat.event import Event, EventListener
 from typing import TypeVar, Generic, final, Iterable
-from threading import RLock
+from threading import Lock
 
 
 _T = TypeVar('_T')
@@ -9,7 +9,7 @@ _T = TypeVar('_T')
 class EventHandler(Generic[_T]):
     def __init__(self):
         self._listener : set[EventListener[_T]] = set()
-        self._lock = RLock()
+        self._lock = Lock()
 
     def add_listener(self, listener: EventListener[_T]):
         with self._lock:

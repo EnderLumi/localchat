@@ -33,9 +33,9 @@ class SerializableChatInformation(ChatInformation,Serializable):
         serial_id.serialize(output_stream)
         serial_name.serialize(output_stream)
 
-    @staticmethod
-    def deserialize(input_stream: RawIOBase) -> 'SerializableUser':
-        Serializable.validate_magic(input_stream)
+    @classmethod
+    def deserialize(cls, input_stream: RawIOBase) -> 'SerializableUser':
+        cls.validate_magic(input_stream)
         serial_uuid = SerializableUUID.deserialize(input_stream)
         serial_name = SerializableString.deserialize(input_stream, MAX_CHAT_NAME_LENGTH)
         return SerializableChatInformation(serial_uuid.value, serial_name.value)

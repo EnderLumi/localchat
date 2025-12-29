@@ -14,9 +14,9 @@ class SerializableString(Serializable):
         output_stream.write(b_len_bytes)
         output_stream.write(b)
 
-    @staticmethod
-    def deserialize(input_stream: RawIOBase, max_size : int) -> 'SerializableString':
-        Serializable.validate_magic(input_stream)
+    @classmethod
+    def deserialize(cls, input_stream: RawIOBase, max_size : int) -> 'SerializableString':
+        cls.validate_magic(input_stream)
         b_len_bytes = read_exact(input_stream, 8)
         b_len = int.from_bytes(b_len_bytes, "big")
         if b_len > max_size * 4: # utf-8 encoded characters can take up 4 bytes each at most

@@ -31,9 +31,9 @@ class SerializableUserMessage(UserMessage,Serializable):
         serial_message.serialize(output_stream)
         serial_timestamp.serialize(output_stream)
 
-    @staticmethod
-    def deserialize(input_stream: RawIOBase) -> 'SerializableUserMessage':
-        Serializable.validate_magic(input_stream)
+    @classmethod
+    def deserialize(cls, input_stream: RawIOBase) -> 'SerializableUserMessage':
+        cls.validate_magic(input_stream)
         serial_sender = SerializableUser.deserialize(input_stream)
         serial_message = SerializableString.deserialize(input_stream, MAX_USER_NAME_LENGTH)
         serial_timestamp = SerializableFloat.deserialize(input_stream)

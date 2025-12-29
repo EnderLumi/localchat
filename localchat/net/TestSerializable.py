@@ -12,9 +12,9 @@ class TestSerializable(Serializable):
         self._num = number
     def serialize_impl(self, output_stream: RawIOBase):
         output_stream.write(self._num.to_bytes(TestSerializable._LENGTH, byteorder='big', signed=True))
-    @staticmethod
-    def deserialize(input_stream: RawIOBase, max_num: int, min_num: int) -> 'TestSerializable':
-        Serializable.validate_magic(input_stream)
+    @classmethod
+    def deserialize(cls, input_stream: RawIOBase, max_num: int, min_num: int) -> 'TestSerializable':
+        cls.validate_magic(input_stream)
         b = read_exact(input_stream, TestSerializable._LENGTH)
         num = int.from_bytes(b, byteorder='big', signed=True)
         if num > max_num or num < min_num:

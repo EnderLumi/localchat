@@ -27,9 +27,9 @@ class _MySerializableUserMessage(Serializable):
         serial_message.serialize(output_stream)
         serial_timestamp.serialize(output_stream)
 
-    @staticmethod
-    def deserialize(input_stream: RawIOBase):
-        Serializable.validate_magic(input_stream)
+    @classmethod
+    def deserialize(cls, input_stream: RawIOBase):
+        cls.validate_magic(input_stream)
         serial_uuid = SerializableUUID.deserialize(input_stream)
         serial_message = SerializableString.deserialize(input_stream, MAX_MESSAGE_LENGTH)
         serial_timestamp = SerializableFloat.deserialize(input_stream)

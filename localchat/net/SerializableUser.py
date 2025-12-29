@@ -29,9 +29,9 @@ class SerializableUser(User,Serializable):
         serial_uuid = SerializableUUID(self._id)
         serial_name = SerializableString(self._name)
 
-    @staticmethod
-    def deserialize(input_stream: RawIOBase) -> 'SerializableUser':
-        Serializable.validate_magic(input_stream)
+    @classmethod
+    def deserialize(cls, input_stream: RawIOBase) -> 'SerializableUser':
+        cls.validate_magic(input_stream)
         serial_uuid = SerializableUUID.deserialize(input_stream)
         serial_name = SerializableString.deserialize(input_stream, MAX_USER_NAME_LENGTH)
         return SerializableUser(serial_uuid.value, serial_name.value)

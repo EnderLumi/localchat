@@ -1,3 +1,3 @@
-from .colors import *
-from .defaults import *
-import limits
+from . import colors
+from . import defaults
+from . import limits

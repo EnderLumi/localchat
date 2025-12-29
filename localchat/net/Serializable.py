@@ -18,7 +18,7 @@ class Serializable:
             "magic number must be overwritten by child class"
         )
         self.MAGIC.write(output_stream)
-        self.serialize(output_stream)
+        self.serialize_impl(output_stream)
 
     def serialize_impl(self, output_stream: RawIOBase):
         """

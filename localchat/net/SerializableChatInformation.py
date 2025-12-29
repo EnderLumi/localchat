@@ -7,7 +7,7 @@ from io import RawIOBase
 
 
 class SerializableChatInformation(ChatInformation,Serializable):
-    MAGIC: MagicNumber = MagicNumber(0x2025_12_29_447a0_93f0)
+    MAGIC: MagicNumber = MagicNumber(0x2025_12_29_447a_93f0)
 
     def __init__(self, chat_id: UUID, name: str):
         super().__init__()

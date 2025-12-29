@@ -45,7 +45,7 @@ class AbstractLogic(Logic):
             if self._state != _READY:
                 raise RuntimeError('expected state: READY')
             if self.ui is None:
-                raise AssertionError('ui is not set')
+                raise RuntimeError('ui is not set')
 
             self._state = _RUNNING
 

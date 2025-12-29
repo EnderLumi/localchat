@@ -1,5 +1,6 @@
 from localchat.client import UI, Logic
 from typing import final
+from threading import main_thread, current_thread
 
 
 class AbstractUI(UI):
@@ -16,7 +17,9 @@ class AbstractUI(UI):
     @final
     def start(self):
         if self.logic is None:
-            raise AssertionError("logic is not set")
+            raise RuntimeError("logic is not set")
+        if current_thread() != main_thread():
+            raise RuntimeError("ui must be started by main thread")
         self.start_impl()
 
     def start_impl(self):

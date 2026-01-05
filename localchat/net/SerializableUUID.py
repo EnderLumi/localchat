@@ -1,5 +1,5 @@
 from localchat.net import Serializable, MagicNumber, read_exact
-from io import RawIOBase
+from localchat.typing import BinaryIOBase
 from uuid import UUID
 
 
@@ -9,11 +9,11 @@ class SerializableUUID(Serializable):
     def __init__(self, value: UUID):
         self.value = value
 
-    def serialize_impl(self, output_stream: RawIOBase):
+    def serialize_impl(self, output_stream: BinaryIOBase):
         output_stream.write(self.value.bytes)
 
     @classmethod
-    def deserialize(cls, input_stream: RawIOBase) -> 'SerializableUUID':
+    def deserialize(cls, input_stream: BinaryIOBase) -> 'SerializableUUID':
         cls.validate_magic(input_stream)
         b = read_exact(input_stream, 16)
         value = UUID(bytes=b)

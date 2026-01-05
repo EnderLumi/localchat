@@ -1,5 +1,5 @@
 from localchat.net import read_exact
-from io import RawIOBase
+from localchat.typing import BinaryIOBase
 from typing import final
 
 
@@ -19,10 +19,7 @@ class MagicNumber:
             self._bytes = number.to_bytes(length=MagicNumber._LENGTH, byteorder='big', signed=True)
         except OverflowError:
             raise ValueError("magic number is too large")
-        assert (
-            MagicNumber._validate_magic(number),
-            "magic number must be unique"
-        )
+        assert MagicNumber._validate_magic(number), "magic number must be unique"
 
     @staticmethod
     def _validate_magic(magic : int) -> bool:
@@ -30,14 +27,14 @@ class MagicNumber:
         MagicNumber._KNOWN_MAGIC.add(magic)
         return True
 
-    def write(self, output_stream : RawIOBase):
+    def write(self, output_stream : BinaryIOBase):
         """
         :raises IOError: if an IOError occurs when writing to the stream
         :param output_stream:
         :return:
         """
         output_stream.write(self._bytes)
-    def read_and_compare(self, input_stream : RawIOBase):
+    def read_and_compare(self, input_stream : BinaryIOBase):
         """
         :raises IOError: if an IOError occurs when reading from the stream
         :param input_stream:

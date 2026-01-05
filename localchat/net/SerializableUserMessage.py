@@ -1,7 +1,7 @@
 from localchat.util import UserMessage, User
 from localchat.net import Serializable, MagicNumber, SerializableUser, SerializableFloat, SerializableString
+from localchat.typing import BinaryIOBase
 from localchat.config.limits import MAX_USER_NAME_LENGTH
-from io import RawIOBase
 
 
 class SerializableUserMessage(UserMessage,Serializable):
@@ -23,7 +23,7 @@ class SerializableUserMessage(UserMessage,Serializable):
     def timestamp(self) -> float:
         return self._timestamp
 
-    def serialize_impl(self, output_stream: RawIOBase):
+    def serialize_impl(self, output_stream: BinaryIOBase):
         serial_sender = SerializableUser.create_copy(self._sender)
         serial_message = SerializableString(self._message)
         serial_timestamp = SerializableFloat(self._timestamp)
@@ -32,7 +32,7 @@ class SerializableUserMessage(UserMessage,Serializable):
         serial_timestamp.serialize(output_stream)
 
     @classmethod
-    def deserialize(cls, input_stream: RawIOBase) -> 'SerializableUserMessage':
+    def deserialize(cls, input_stream: BinaryIOBase) -> 'SerializableUserMessage':
         cls.validate_magic(input_stream)
         serial_sender = SerializableUser.deserialize(input_stream)
         serial_message = SerializableString.deserialize(input_stream, MAX_USER_NAME_LENGTH)

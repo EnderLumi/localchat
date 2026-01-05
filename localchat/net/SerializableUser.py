@@ -1,9 +1,9 @@
 from localchat.net import Serializable, MagicNumber, SerializableUUID, SerializableString
 from localchat.util import User
+from localchat.typing import BinaryIOBase
 from localchat.config.limits import MAX_USER_NAME_LENGTH
 from uuid import UUID
 from ipaddress import IPv4Address, IPv6Address
-from io import RawIOBase
 
 
 class SerializableUser(User,Serializable):
@@ -25,12 +25,12 @@ class SerializableUser(User,Serializable):
     def get_ip_address(self) -> IPv4Address | IPv6Address:
         return IPv4Address("0.0.0.0")
 
-    def serialize_impl(self, output_stream: RawIOBase):
+    def serialize_impl(self, output_stream: BinaryIOBase):
         serial_uuid = SerializableUUID(self._id)
         serial_name = SerializableString(self._name)
 
     @classmethod
-    def deserialize(cls, input_stream: RawIOBase) -> 'SerializableUser':
+    def deserialize(cls, input_stream: BinaryIOBase) -> 'SerializableUser':
         cls.validate_magic(input_stream)
         serial_uuid = SerializableUUID.deserialize(input_stream)
         serial_name = SerializableString.deserialize(input_stream, MAX_USER_NAME_LENGTH)

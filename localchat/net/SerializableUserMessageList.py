@@ -3,8 +3,8 @@ from localchat.net import (
     SerializableString, SerializableFloat, read_exact
 )
 from localchat.util import User, UserMessage
+from localchat.typing import BinaryIOBase
 from localchat.config.limits import MAX_MESSAGE_LENGTH
-from io import RawIOBase
 
 
 class _MyUserMessage(UserMessage):
@@ -31,7 +31,7 @@ class SerializableUserMessageList(Serializable):
     def __init__(self):
         self.items: list[UserMessage] = []
 
-    def serialize_impl(self, output_stream: RawIOBase):
+    def serialize_impl(self, output_stream: BinaryIOBase):
         users: set[User] = set()
         for sender in [message.sender() for message in self.items[::-1]]:
             users.add(sender)
@@ -64,7 +64,7 @@ class SerializableUserMessageList(Serializable):
 
     @classmethod
     def deserialize(
-            cls, input_stream: RawIOBase,
+            cls, input_stream: BinaryIOBase,
             max_user_count: int,
             max_message_count: int
     ) -> 'SerializableUserMessageList':

@@ -1,5 +1,5 @@
 from localchat.net import Serializable, MagicNumber, read_exact
-from io import RawIOBase
+from localchat.typing import BinaryIOBase
 import math
 
 
@@ -9,7 +9,7 @@ class SerializableFloat(Serializable):
     def __init__(self, value: float|int) -> None:
         self.value = float(value)
 
-    def serialize_impl(self, output_stream: RawIOBase):
+    def serialize_impl(self, output_stream: BinaryIOBase):
         if math.isinf(self.value):
             right = 0
             left = 1 if self.value > 0 else 2
@@ -24,7 +24,7 @@ class SerializableFloat(Serializable):
         output_stream.write(right_bytes)
 
     @classmethod
-    def deserialize(cls, input_stream: RawIOBase) -> 'SerializableFloat':
+    def deserialize(cls, input_stream: BinaryIOBase) -> 'SerializableFloat':
         cls.validate_magic(input_stream)
         left_bytes = read_exact(input_stream, 8)
         right_bytes = read_exact(input_stream, 8)

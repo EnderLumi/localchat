@@ -1,5 +1,5 @@
 from localchat.net import Serializable, MagicNumber, read_exact
-from io import RawIOBase
+from localchat.typing import BinaryIOBase
 
 
 class SerializableString(Serializable):
@@ -8,14 +8,14 @@ class SerializableString(Serializable):
     def __init__(self, value: str) -> None:
         self.value = value
 
-    def serialize_impl(self, output_stream: RawIOBase):
+    def serialize_impl(self, output_stream: BinaryIOBase):
         b = self.value.encode("utf-8","strict")
         b_len_bytes = len(b).to_bytes(8,"big")
         output_stream.write(b_len_bytes)
         output_stream.write(b)
 
     @classmethod
-    def deserialize(cls, input_stream: RawIOBase, max_size : int) -> 'SerializableString':
+    def deserialize(cls, input_stream: BinaryIOBase, max_size : int) -> 'SerializableString':
         cls.validate_magic(input_stream)
         b_len_bytes = read_exact(input_stream, 8)
         b_len = int.from_bytes(b_len_bytes, "big")

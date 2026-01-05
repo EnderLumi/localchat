@@ -1,6 +1,7 @@
-from io import RawIOBase
+from localchat.typing import BinaryIOBase
 
-def readinto_exact(input_stream: RawIOBase, buffer : bytearray):
+
+def readinto_exact(input_stream: BinaryIOBase, buffer : bytearray):
     buffer_view = memoryview(buffer)
     wanted = len(buffer)
     bytes_read = 0
@@ -12,7 +13,7 @@ def readinto_exact(input_stream: RawIOBase, buffer : bytearray):
             raise IOError("unexpected EOF")
         bytes_read += new_bytes_read
 
-def read_exact(input_stream: RawIOBase, n : int) -> bytes:
+def read_exact(input_stream: BinaryIOBase, n : int) -> bytes:
     buffer = bytearray(n)
     readinto_exact(input_stream, buffer)
     return buffer

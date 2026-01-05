@@ -1,6 +1,6 @@
 from localchat.net import Serializable, MagicNumber, read_exact
+from localchat.typing import BinaryIOBase
 from typing import Callable
-from io import RawIOBase
 
 
 class SerializableList(Serializable):
@@ -10,7 +10,7 @@ class SerializableList(Serializable):
         super().__init__()
         self.items : list[Serializable] = []
 
-    def serialize_impl(self, output_stream: RawIOBase):
+    def serialize_impl(self, output_stream: BinaryIOBase):
         count_bytes = len(self.items).to_bytes(8,"big")
         output_stream.write(count_bytes)
         for item in self.items:
@@ -18,8 +18,8 @@ class SerializableList(Serializable):
 
     @classmethod
     def deserialize(
-            cls, input_stream: RawIOBase,
-            deserializer: Callable[[RawIOBase],Serializable],
+            cls, input_stream: BinaryIOBase,
+            deserializer: Callable[[BinaryIOBase],Serializable],
             max_size: int
     ) -> 'SerializableList':
         cls.validate_magic(input_stream)

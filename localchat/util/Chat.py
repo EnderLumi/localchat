@@ -1,6 +1,6 @@
 from localchat.util import User, UserMessage, ChatInformation
 from localchat.event import EventHandler
-from io import RawIOBase
+from localchat.typing import BinaryIOBase
 
 
 class Chat:
@@ -62,7 +62,7 @@ class Chat:
             message to the recipient
         """
 
-    def download_chat(self, output_stream : RawIOBase):
+    def download_chat(self, output_stream : BinaryIOBase):
         """
         Downloads the chat.
         :param output_stream:

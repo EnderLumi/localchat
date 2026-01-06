@@ -1,18 +1,18 @@
-import uuid
-import ipaddress
+from uuid import UUID
+from ipaddress import IPv4Address, IPv6Address
 
 
 class ChatInformation:
     def __init__(self): ...
 
-    def get_id(self) -> uuid.UUID: ...
+    def get_id(self) -> UUID: ...
     def get_name(self) -> str:
         """
         Returns the chats name.
         :return:
         :raise IOError: if a IOError occurs while receiving the name
         """
-    def get_ip_address(self) -> ipaddress.IPv4Address | ipaddress.IPv6Address: ...
+    def get_ip_address(self) -> IPv4Address | IPv6Address: ...
     def get_port(self) -> int: ...
 
     def __eq__(self, other) -> bool:

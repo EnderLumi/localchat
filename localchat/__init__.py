@@ -1,5 +1,4 @@
 from . import config
-from . import typing
 from . import util
 from . import event
 from . import net

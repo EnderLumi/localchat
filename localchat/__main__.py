@@ -4,19 +4,21 @@
 
 import sys
 
-from localchat.client.client_interface import ChatInterface
-from localchat.server.server_interface import ServerInterface
-from localchat.core.storage import get_user_name, set_user_name
-from localchat.client.client import ChatClient
-from localchat.client.discovery import ServerDiscovery
-from localchat.server.broadcast import ServerResponder
-from localchat.server.server import ChatServer
-#from localchat.server.broadcast import ServerAnnouncer
+from localchat.client.logicImpl.testing.TestLogic import TestLogic
+from localchat.client.UIImpl.simple.SimpleUI import SimpleUI
 
 from localchat.config.defaults import DEFAULT_PORT
 
 
 def main():
+    ui = SimpleUI()
+    logic = TestLogic()
+    logic.set_ui(ui)
+    ui.set_logic(logic)
+
+    logic.start()
+    return
+
     print("____LOCALCHAT____") #das muss noch ihrgendwie cooler
 
     username = get_user_name()
@@ -168,7 +170,7 @@ def chat_loop(client, use_prompt_toolkit):
 """
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1 and sys.argv[1] == "start":
+    if True: # len(sys.argv) > 1 and sys.argv[1] == "start":
         main()
     else:
         print("Try use: localchat start")

@@ -2,8 +2,7 @@ from localchat.net import (
     Serializable, MagicNumber, SerializableUser, SerializableList,
     SerializableString, SerializableFloat, read_exact
 )
-from localchat.util import User, UserMessage
-from localchat.typing import BinaryIOBase
+from localchat.util import User, UserMessage, BinaryIOBase
 from localchat.config.limits import MAX_MESSAGE_LENGTH
 
 

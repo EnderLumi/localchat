@@ -1,6 +1,5 @@
 from localchat.net import Serializable, MagicNumber, SerializableUUID, SerializableString
-from localchat.util import User
-from localchat.typing import BinaryIOBase
+from localchat.util import User, BinaryIOBase
 from localchat.config.limits import MAX_USER_NAME_LENGTH
 from uuid import UUID
 from ipaddress import IPv4Address, IPv6Address

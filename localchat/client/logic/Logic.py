@@ -1,5 +1,4 @@
-from localchat.util import Chat, ChatInformation
-from localchat.typing import BinaryIOBase
+from localchat.util import Chat, ChatInformation, BinaryIOBase
 
 
 class Logic:
@@ -44,7 +43,7 @@ class Logic:
         :param online:
         :param port:
         :return:
-        :raises Error: if an error occurs while creating the chat
+        :raises IOError: if an I/O error occurs while creating the chat
         """
     def load_chat(self, input_stream: BinaryIOBase, online : bool, port: int) -> Chat:
         """
@@ -53,14 +52,14 @@ class Logic:
         :param online:
         :param port:
         :return:
-        :raises Error: if an error occurs while loading the chat
+        :raises IOError: if an I/O error occurs while loading the chat
         :raises NotImplementedError: if this function is not implemented
         """
     def search_server(self) -> list[Chat]:
         """
         Searches for chat servers.
         :return:
-        :raises Error: if an error occurs while searching for servers
+        :raises IOError: if an I/O error occurs while searching for servers
         """
     def get_system_chat(self) -> Chat:
         """

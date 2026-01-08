@@ -1,4 +1,4 @@
-from localchat.typing import BinaryIOBase
+from localchat.util import BinaryIOBase
 
 
 def readinto_exact(input_stream: BinaryIOBase, buffer : bytearray):

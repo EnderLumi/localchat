@@ -1,14 +1,13 @@
-from localchat.util import User, ChatInformation
+from localchat.util import User, Chat, ChatInformation, BinaryIOBase
 from localchat.client.logicImpl.AbstractChat import AbstractChat
 from localchat.client.logicImpl.testing import TestUser, TestChatInformation, TalkingTestUser
 from localchat.event import Event
-from localchat.typing import BinaryIOBase
 from threading import RLock
 from uuid import UUID, uuid4
 from collections.abc import Callable
 
 
-class ServerUser(TalkingTestUser):
+class ServerUser(TestUser):
     _MESSAGES = [
         "Beep Boop",
         "Important Server Message: This is important.",
@@ -21,12 +20,16 @@ class ServerUser(TalkingTestUser):
         super().__init__(user_id, name)
         self._counter = 0
 
-    def get_tick_message(self) -> str:
+    def tick(self, chat: Chat):
         if self._counter >= len(self._MESSAGES):
             self._counter = 0
-        result = self._MESSAGES[self._counter]
+        message =  self._MESSAGES[self._counter]
         self._counter += 1
-        return result
+        self.post_message(chat, message)
+
+    def user_posted_message(self, chat: Chat, message: str):
+        response = f"Real user attempted to execute server sided command: '{message}'"
+        self.send_private_message_to_real_user(chat, response)
 
 
 class TestChat(AbstractChat):
@@ -36,12 +39,13 @@ class TestChat(AbstractChat):
         self.real_user: User|None = None
         self._chat_id = chat_id
         self._chat_info = TestChatInformation(self._chat_id, f"Test-Chat-{self._chat_id.hex}")
-        self._server_user = TestUser(uuid4(), "test chat server")
+        self._server_user = ServerUser(uuid4(), "server")
         self._lock = RLock()
         self._on_real_user_leaves: Callable[[], None] = lambda: None
 
     def tick(self):
         with self._lock:
+            self._server_user.tick(self)
             for test_user in self.test_users:
                 test_user.tick(self)
 

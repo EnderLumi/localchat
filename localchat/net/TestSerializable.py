@@ -1,7 +1,5 @@
-from localchat.net import Serializable
-from localchat.net import MagicNumber
-from localchat.net import read_exact
-from localchat.typing import BinaryIOBase
+from localchat.net import Serializable, MagicNumber, read_exact
+from localchat.util import BinaryIOBase
 
 # A class for testing how the 'Serializable' interface feels when used
 

@@ -14,15 +14,15 @@ class AbstractLogic(Logic):
         # noinspection PyTypeChecker
         self.ui : UI = None
         self.ui_ready = False
-        self._lock = RLock()
-        self._state = _READY
+        self._abstract_logic_lock = RLock()
+        self._abstract_logic_state = _READY
         # self._ui_thread = None
         self._logic_thread = None
 
     @final
     def set_ui(self, ui : object):
-        with self._lock:
-            if self._state != _READY:
+        with self._abstract_logic_lock:
+            if self._abstract_logic_state != _READY:
                 raise RuntimeError('expected state: READY')
             if not isinstance(ui,UI):
                 raise TypeError('ui must be an instance of UI')
@@ -31,23 +31,24 @@ class AbstractLogic(Logic):
 
     @final
     def ui_initialized(self):
-        current_state = self._state
+        current_state = self._abstract_logic_state
         if current_state == _STOPPING or current_state == _STOPPED: return
-        with self._lock:
-            if self._state == _STOPPING or self._state == _STOPPED: return
-            if self._state == _READY:
+        with self._abstract_logic_lock:
+            if self._abstract_logic_state == _STOPPING or self._abstract_logic_state == _STOPPED: return
+            if self._abstract_logic_state == _READY:
                 raise RuntimeError('unexpected state: READY')
             self.ui_ready = True
+            self.ui_initialized_impl()
 
     @final
     def start(self):
-        with self._lock:
-            if self._state != _READY:
+        with self._abstract_logic_lock:
+            if self._abstract_logic_state != _READY:
                 raise RuntimeError('expected state: READY')
             if self.ui is None:
                 raise RuntimeError('ui is not set')
 
-            self._state = _RUNNING
+            self._abstract_logic_state = _RUNNING
 
             self._logic_thread = Thread(target=self.start_impl, name="localchat logic main thread")
             self._logic_thread.start()
@@ -59,19 +60,22 @@ class AbstractLogic(Logic):
 
     @final
     def shutdown(self):
-        current_state = self._state
+        current_state = self._abstract_logic_state
         if current_state == _STOPPING or current_state == _STOPPED: return
-        with self._lock:
-            if self._state == _STOPPING or self._state == _STOPPED: return
-            if self._state != _RUNNING:
+        with self._abstract_logic_lock:
+            if self._abstract_logic_state == _STOPPING or self._abstract_logic_state == _STOPPED: return
+            if self._abstract_logic_state != _RUNNING:
                 raise RuntimeError('expected state: RUNNING')
-            self._state = _STOPPING
+            self._abstract_logic_state = _STOPPING
 
             self.ui.shutdown()
             self.shutdown_impl()
             self._logic_thread.join()
 
-            self._state = _STOPPED
+            self._abstract_logic_state = _STOPPED
+
+    def ui_initialized_impl(self):
+        ...
 
     def start_impl(self):
         raise NotImplementedError()

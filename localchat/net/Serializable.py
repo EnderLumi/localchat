@@ -1,5 +1,5 @@
 from localchat.net import MagicNumber
-from localchat.typing import BinaryIOBase
+from localchat.util import BinaryIOBase
 from typing import final
 
 

@@ -1,5 +1,5 @@
 from localchat.net import Serializable, MagicNumber, read_exact
-from localchat.typing import BinaryIOBase
+from localchat.util import BinaryIOBase
 import math
 
 

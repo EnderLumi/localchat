@@ -1,6 +1,5 @@
-from localchat.util import User, UserMessage, ChatInformation
+from localchat.util import User, UserMessage, ChatInformation, BinaryIOBase
 from localchat.event import EventHandler
-from localchat.typing import BinaryIOBase
 
 
 class Chat:

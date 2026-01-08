@@ -1,6 +1,5 @@
-from localchat.util import UserMessage, User
+from localchat.util import UserMessage, User, BinaryIOBase
 from localchat.net import Serializable, MagicNumber, SerializableUser, SerializableFloat, SerializableString
-from localchat.typing import BinaryIOBase
 from localchat.config.limits import MAX_USER_NAME_LENGTH
 
 

@@ -1,3 +1,4 @@
+from . import event
 from .BinaryIOBase import BinaryIOBase
 from .User import User
 from .Chat import Chat

@@ -84,6 +84,8 @@ class SerializableUserMessageList(Serializable):
 
         message_count_bytes = read_exact(input_stream, 8)
         message_count = int.from_bytes(message_count_bytes, 'big')
+        if message_count > max_message_count:
+            raise IOError("invalid message count")
         messages = list()
         for i in range(message_count):
             user_index_bytes = read_exact(input_stream, 8)

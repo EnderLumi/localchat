@@ -1,4 +1,4 @@
-from localchat.event import Event, EventListener
+from localchat.util.event import Event, EventListener
 from typing import TypeVar, Generic, final, Iterable
 from threading import Lock
 

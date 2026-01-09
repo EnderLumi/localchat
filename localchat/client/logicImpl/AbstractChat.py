@@ -1,5 +1,5 @@
 from localchat.util import Chat, User, UserMessage
-from localchat.event import EventHandler
+from localchat.util.event import EventHandler
 from threading import RLock
 from typing import final
 

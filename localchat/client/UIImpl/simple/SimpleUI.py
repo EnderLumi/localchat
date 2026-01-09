@@ -1,7 +1,7 @@
 from localchat.client.UIImpl import AbstractUI
 from localchat.client.UIImpl.simple import SimpleChatUI
 from localchat.util import Chat, User
-from localchat.event import EventHandler, EventListener, Event
+from localchat.util.event import EventHandler, EventListener, Event
 from uuid import UUID, uuid4
 from ipaddress import IPv4Address, IPv6Address
 
@@ -148,6 +148,7 @@ class SimpleUI(AbstractUI,EventListener[str]):
 
     def start_impl(self):
         print("=== Simple UI 1.0 ===")
+        print("type 'help' for a list of available commands")
         self._system_chat = SimpleChatUI(self.logic.get_system_chat())
         self._system_chat.join(self.active_appearance)
         self.logic.ui_initialized()

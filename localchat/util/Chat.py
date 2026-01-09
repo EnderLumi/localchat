@@ -1,15 +1,28 @@
 from localchat.util import User, UserMessage, ChatInformation, BinaryIOBase
-from localchat.event import EventHandler
+from localchat.util.event import EventHandler
 
 
 class Chat:
-
+    """
+    Represents a chat that can be joined and where messages can be posted and received.
+    Before joining a chat, the code using the chat should add EventListeners to all EventHandlers
+    it wants to receive information for, because events might be fired the very moment 'join' is called.
+    """
 
     """
     Wenn ich es richtig verstanden habe, wird Chat ein hochaktives Objekt mit Logik, Events, etc.
     Dabei dachte ich, soll utils keine Netzwerkfunktionen haben? Zerstört das nicht unsere Layer Deinition?
     z.B. in net/ChatSerializationMethod.py hast du Chat importier. Dadurch hätte ein Serializer theoretisch auch Rechte Nachrichten zu senden.
     Oder habe ich das falsch verstanden?
+
+    Leon131212:
+    Für die Verwendung von Chat ist kein Wissen über Netzwerkfunktionen nötig und
+    Events in util zu verwenden ist auch OK.
+    Chat in "util" zu haben verstößt also nicht gegen unsere geplante Strucktur.
+
+    Die Sache mit "net/ChatSerializationMethod hat das Recht Nachrichten zu senden" versteh ich noch nicht so ganz.
+    Ich hab "net/ChatSerializationMethod", "net/SerializableChat" und "net/CSM25122901" 
+    gerade entfernt (waren veraltete Experimente). Wurde das Problem gelöst dadurch?
     """
 
     def __init__(self): ...

@@ -1,7 +1,7 @@
 from localchat.util import User, Chat, ChatInformation, BinaryIOBase
 from localchat.client.logicImpl.AbstractChat import AbstractChat
-from localchat.client.logicImpl.testing import TestUser, TestChatInformation, TalkingTestUser
-from localchat.event import Event
+from localchat.client.logicImpl.testing import TestUser, TestChatInformation
+from localchat.util.event import Event
 from threading import RLock
 from uuid import UUID, uuid4
 from collections.abc import Callable

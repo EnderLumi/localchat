@@ -1,5 +1,5 @@
 from localchat.util import Chat, User, UserMessage
-from localchat.event import EventListener, Event
+from localchat.util.event import EventListener, Event
 
 
 class MessagePostedListener(EventListener[UserMessage]):

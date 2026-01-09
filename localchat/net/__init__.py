@@ -10,5 +10,3 @@ from .SerializableUserMessage import SerializableUserMessage
 from .SerializableList import SerializableList
 from .SerializableChatInformation import SerializableChatInformation
 from .SerializableUserMessageList import SerializableUserMessageList
-from .SerializableChat import SerializableChat
-from .ChatSerializationMethod import ChatSerializationMethod

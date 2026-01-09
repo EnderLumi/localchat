@@ -1,5 +1,5 @@
 from localchat.util import User, Chat, UserMessage
-from localchat.event import Event
+from localchat.util.event import Event
 from uuid import UUID
 from ipaddress import IPv4Address, IPv6Address
 from time import time

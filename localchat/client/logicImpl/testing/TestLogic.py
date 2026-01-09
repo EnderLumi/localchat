@@ -33,7 +33,8 @@ class TestLogic(AbstractLogic):
 
     def ui_initialized_impl(self):
         self.send_system_message("=== Test Logic 1.0 ===")
-        self.send_system_message("type 'help' for a list of available commands")
+        # the logic should not assume any UI details like commands
+        # self.send_system_message("type 'help' for a list of available commands")
 
     def start_impl(self):
         self._chat_tick_thread = Thread(target=self.tick_work)

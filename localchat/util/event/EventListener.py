@@ -1,4 +1,4 @@
-from localchat.event import Event
+from localchat.util.event import Event
 from typing import Generic, TypeVar
 
 

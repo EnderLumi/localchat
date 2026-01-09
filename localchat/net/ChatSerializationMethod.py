@@ -25,6 +25,9 @@ class ChatSerializationMethod:
     def get_priority(self) -> float:
         return self._priority
 
+
+    #TODO: Tippfehler "methode" -> "method" (gleicher Tippfehler in MAX_CHAT_SERIALIZATION_METHODE_NAME_LENGTH)
+
     def supports_deserialisation_of_methode(self, chat_serialization_method_name: str) -> bool:
         return chat_serialization_method_name == self.get_name()
 

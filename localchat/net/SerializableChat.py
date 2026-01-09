@@ -39,3 +39,8 @@ class SerializableChat(Serializable):
 
         chat = sorted_applicable_methods[0].deserialize_chat(output_stream)
         return SerializableChat(sorted_methods[0], chat)
+        """
+        muss hier vielleicht sorted_applicable_methodes[0] anstelle von sorted_methods[0] returnt werden?
+        Weil applicable ist doch die, die Namen + Priorität und nicht nur Prio geprüft hat.
+        Kann aber gut sein, dass ich es falsch verstehe oder es wichtig ist, dass es so ist.
+        """

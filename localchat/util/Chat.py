@@ -3,6 +3,15 @@ from localchat.event import EventHandler
 
 
 class Chat:
+
+
+    """
+    Wenn ich es richtig verstanden habe, wird Chat ein hochaktives Objekt mit Logik, Events, etc.
+    Dabei dachte ich, soll utils keine Netzwerkfunktionen haben? Zerstört das nicht unsere Layer Deinition?
+    z.B. in net/ChatSerializationMethod.py hast du Chat importier. Dadurch hätte ein Serializer theoretisch auch Rechte Nachrichten zu senden.
+    Oder habe ich das falsch verstanden?
+    """
+
     def __init__(self): ...
 
     def get_chat_info(self) -> ChatInformation:
@@ -10,6 +19,7 @@ class Chat:
         Return the chats information.
         :return:
         """
+
     def set_chat_info(self, chat_info: ChatInformation):
         """
         Uploads a new version of the chat information.
@@ -50,6 +60,7 @@ class Chat:
         :return:
         :raises IOError:
         """
+
     def send_private_message(self, recipient: User, message: str):
         """
         Sends a private message to a member of the chat.

@@ -11,6 +11,12 @@ def readinto_exact(input_stream: BinaryIOBase, buffer : bytearray):
             raise IOError("input stream must not be in non blocking mode")
         if new_bytes_read == 0:
             raise IOError("unexpected EOF")
+
+            """
+            vielleicht sollte man eine Detailiertere Fehlermeldung formulieren?
+            z.B. raise EOFError(f"unexpected EOF after {bytes_read}/{wanted} bytes")
+            """
+
         bytes_read += new_bytes_read
 
 def read_exact(input_stream: BinaryIOBase, n : int) -> bytes:

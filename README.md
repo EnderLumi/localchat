@@ -1,68 +1,6 @@
 # localchat
 just another stupid Lan Chat
 
-Bitte in Editor Format anschauen:
-
-localchat/
-│
-├─ localchat/
-│   ├─ __init__.py
-│   ├─ __main__.py                # CLI-Einstiegspunkt für `localchat start`
-│   │
-│   ├─ core/                      # Zentrale Logik, unabhängig von CLI
-│   │   ├─ __init__.py
-│   │   ├─ network.py             # TCP/UDP-Verbindungen, Socket-Wrapper
-│   │   ├─ protocol.py            # Nachrichtenformate, Serialisierung, Pakettypen
-│   │   ├─ storage.py             # lokale Dateien, Usernamen, Chatverlauf
-│   │   ├─ security.py            # Passwortprüfung, Verschlüsselung (später)
-│   │   └─ utils.py               # Hilfsfunktionen, Farben, Zeitstempel
-│   │
-│   ├─ client/
-│   │   ├─ __init__.py
-│   │   ├─ client.py              # Hauptklasse Client
-│   │   ├─ commands.py            # /msg, /join, /leave usw.
-│   │   ├─ discovery.py           # empfängt UDP-Broadcasts
-│   │   ├─ handlers.py            # Verarbeitung eingehender Pakete
-│   │   └─ interface.py           # Terminal-Ein/Ausgabe
-│   │
-│   ├─ server/
-│   │   ├─ __init__.py
-│   │   ├─ server.py              # Hauptklasse Server
-│   │   ├─ broadcast.py           # UDP-Serveranzeige
-│   │   ├─ session.py             # Verbundene Clients, Hostwechsel
-│   │   └─ commands.py            # Serverbefehle (/kick, /ban, /info server)
-│   │
-│   ├─ config/
-│   │   ├─ __init__.py
-│   │   ├─ defaults.py            # Ports, Pfade, Zeitlimits
-│   │   └─ colors.py              # ANSI-Farbcodes
-│   │
-│   └─ logging/
-│       ├─ __init__.py
-│       ├─ logger.py              # zentraler Logger
-│       └─ formatter.py           # Logformat, Rotation
-│
-├─ tests/                         # Unit- und Integrationstests
-│   ├─ test_client.py
-│   ├─ test_server.py
-│   └─ test_protocol.py
-│
-├─ installer_windows.py
-│
-├─ setup.py
-│
-├─ setup.cfg
-│
-├─ scripts/                       # Entwicklungs- oder Wartungsskripte
-│   ├─ build_wheel.sh
-│   └─ run_local.sh
-│
-├─ pyproject.toml                 # Projektmetadaten, CLI-Entry Point  
-├─ README.md
-└─ LICENSE
-
-
-
 Ablaufidee beim Start
 Nutzer tippt:
 localchat start
@@ -74,12 +12,12 @@ Option eigenen Server starten (mit passwort)
 Befehle:
 
 - localchat start				     soll das program starten (möglich über .whl oder so)   ✅
-- /help							     Liste und Erklärung der Befehle
+- /help							     Liste und Erklärung der Befehle (auch: --help/ -h )
 - /msg [name, ..]				     privat Nachricht(en)
 - /join [servername]			     server beitreten
 - /leave						     verlässt den aktuellen server
 - /list							     Teilnehmer oder (Server anzeigen wenn nicht in aktivem chat)
-- /new host [username / ip & port]	 Hostübergabe (only Host)
+- /newhost [username / ip & port]	 Hostübergabe (only Host)
 - /myColor [blue/yellow/etc./HEX]    Username Farbe (evlt. wenn möglich)
 - /rename							 Name ändern (alle 7 Tage)
 - /info [name/servername]			 metadaten wie ip, Port und ehemalige Namen

@@ -4,7 +4,7 @@ from typing import final
 
 
 class Serializable:
-    MAGIC: MagicNumber = MagicNumber(0)
+    MAGIC: MagicNumber = MagicNumber(0) #Ist es gewollt hier eine globale MagicNumber(0) zu erzeugen?
 
     @final
     def serialize(self, output_stream: BinaryIOBase):
@@ -14,6 +14,12 @@ class Serializable:
         :return:
         """
         assert self.MAGIC != Serializable.MAGIC, "magic number must be overwritten by child class"
+
+        """
+        hier auch wieder assert, wie bei MagicNumber.py. Ich habe dort erklärt, warum ich das für nicht gut halte.
+        (bei validate_magic auch nochmal)
+        """
+
         self.MAGIC.write(output_stream)
         self.serialize_impl(output_stream)
 

@@ -21,6 +21,16 @@ class MagicNumber:
             raise ValueError("magic number is too large")
         assert MagicNumber._validate_magic(number), "magic number must be unique"
 
+        """
+        Ich würde das assert durch einfaches:
+            if not MagicNumber._validate_magic(number):
+                raise ValueError("magic number must be unique")
+        tauschen.
+        Ich habe gehört, assert soll möglichst vermieden werden, weil in veerschiedenen python versionen,
+        oder z.B. auch mit der Optimierten Version "Python -O" alle assert statements entfernt werden.
+        Man kann assert gut im development/debuggen nehmen, aber nicht bei Programmlogik.
+        """
+
     @staticmethod
     def _validate_magic(magic : int) -> bool:
         if magic in MagicNumber._KNOWN_MAGIC: return False
@@ -34,6 +44,7 @@ class MagicNumber:
         :return:
         """
         output_stream.write(self._bytes)
+
     def read_and_compare(self, input_stream : BinaryIOBase):
         """
         :raises IOError: if an IOError occurs when reading from the stream

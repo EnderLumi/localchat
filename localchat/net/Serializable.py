@@ -10,14 +10,6 @@ class Serializable:
     (The static variable 'MAGIC' is used in 'serialize' and 'validate_magic'.)
     """
     MAGIC: MagicNumber = MagicNumber(0)
-    # Ist es gewollt hier eine globale MagicNumber(0) zu erzeugen?
-
-    # Ja das soll so.
-    # Das 'MAGIC' in 'Serializable' wird überschattet durch das 'MAGIC' in
-    # der Klasse, die 'Serializable' implementiert.
-    # In Serializable selbst eine MAGIC-Variable zu haben ermöglicht es,
-    # in Methoden, die nicht genauer spezifiezierte Serializable-Objekte verwenden, auf MAGIC
-    # zuzugreifen. (So wie es in 'serialize' und 'validate_magic' getan wird.)
 
     @final
     def serialize(self, output_stream: BinaryIOBase):

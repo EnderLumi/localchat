@@ -19,7 +19,8 @@ class SerializableString(Serializable):
         cls.validate_magic(input_stream)
         b_len_bytes = read_exact(input_stream, 8)
         b_len = int.from_bytes(b_len_bytes, "big")
-        if b_len > max_size * 4: # utf-8 encoded characters can take up 4 bytes each at most
+        MAX_BYTES = max_size * 8
+        if b_len > MAX_BYTES or b_len < 0: # utf-8 encoded characters can take up 4 bytes each at most
             raise IOError("Invalid string size")
         b = read_exact(input_stream, b_len)
         try:

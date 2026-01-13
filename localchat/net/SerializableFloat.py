@@ -37,6 +37,11 @@ class SerializableFloat(Serializable):
             else: raise IOError("float is not a valid value")
         else:
             value = left / right
+
+            """
+            könnte zu einem fehler kommen wenn durch 0 geteilt wird, oder zu einem overflow, wenn die daten korrupt sind.
+            """
+
         return SerializableFloat(value)
 
     def __repr__(self) -> str:

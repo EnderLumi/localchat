@@ -19,6 +19,7 @@ def main():
     logic.start()
     return
 
+"""
     print("____LOCALCHAT____") #das muss noch ihrgendwie cooler
 
     username = get_user_name()
@@ -60,7 +61,6 @@ def main():
     print("  [1–n] Join found server")
 
     choice = input("Enter a choice: ").strip().lower()
-
 
     # starts a new server
     if choice == "n":
@@ -141,7 +141,7 @@ def main():
 
     else:
         print("Invalid choice.")
-
+"""
 """
 def chat_loop(client, use_prompt_toolkit):
     if use_prompt_toolkit:

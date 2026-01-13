@@ -54,10 +54,3 @@ class AbstractChat(Chat):
     @final
     def on_connection_failure(self) -> EventHandler[IOError]:
         return self._connection_failure_handler
-
-
-
-
-
-
-

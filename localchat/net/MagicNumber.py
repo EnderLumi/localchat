@@ -22,18 +22,6 @@ class MagicNumber:
         if not MagicNumber._validate_magic(number):
             raise ValueError("magic number must be unique")
 
-        """
-        Ich würde das assert durch einfaches:
-            if not MagicNumber._validate_magic(number):
-                raise ValueError("magic number must be unique")
-        tauschen.
-        Ich habe gehört, assert soll möglichst vermieden werden, weil in veerschiedenen python versionen,
-        oder z.B. auch mit der Optimierten Version "Python -O" alle assert statements entfernt werden.
-        Man kann assert gut im development/debuggen nehmen, aber nicht bei Programmlogik.
-        
-        Leon: die Version ohne "assert" in den Code übernommen
-        """
-
     @staticmethod
     def _validate_magic(magic : int) -> bool:
         if magic in MagicNumber._KNOWN_MAGIC: return False

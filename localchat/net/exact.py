@@ -23,17 +23,6 @@ def readinto_exact(input_stream: BinaryIOBase, buffer : bytearray|memoryview[int
                 f" but there where only {bytes_read} bytes remaining)"
             )
             raise IOError() from ex
-            """
-            vielleicht sollte man eine Detailiertere Fehlermeldung formulieren?
-            z.B. raise EOFError(f"unexpected EOF after {bytes_read}/{wanted} bytes")
-            
-            Leon:
-            Hab die Fehlermeldung informativer gemacht. Ich hab den EOFError erstmal in einem
-            IOError verpackt, da Code der diese Funktion verwendet nur IOError erwartet.
-            Mir fällt aber auch kein Fall ein, in dem eine expliziete Unterscheidung
-            zwischen einem EOFError und einem IOErrors notwendig währe bei der Fehlerbehandlung in
-            Localchat, also können wir es soweit ich sehen kann auch langzeitig so lassen.
-            """
 
         bytes_read += new_bytes_read
 

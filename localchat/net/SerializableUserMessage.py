@@ -34,7 +34,7 @@ class SerializableUserMessage(UserMessage,Serializable):
     def deserialize(cls, input_stream: BinaryIOBase) -> 'SerializableUserMessage':
         cls.validate_magic(input_stream)
         serial_sender = SerializableUser.deserialize(input_stream)
-        serial_message = SerializableString.deserialize(input_stream, MAX_USER_NAME_LENGTH)
+        serial_message = SerializableString.deserialize(input_stream, MAX_USER_NAME_LENGTH) #Jonas: warum MAX_USER_NAME_LENGTH bei einer Message?
         serial_timestamp = SerializableFloat.deserialize(input_stream)
         return SerializableUserMessage(serial_sender, serial_message.value, serial_timestamp.value)
 

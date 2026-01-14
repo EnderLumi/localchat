@@ -25,7 +25,7 @@ class SerializableList(Serializable):
         cls.validate_magic(input_stream)
         count_bytes = read_exact(input_stream, 8)
         count = int.from_bytes(count_bytes, "big")
-        if count > max_size:
+        if count < 0 or count > max_size:
             raise IOError("invalid list length")
         items = []
         for i in range(count):

@@ -68,9 +68,15 @@ class AbstractLogic(Logic):
                 raise RuntimeError('expected state: RUNNING')
             self._abstract_logic_state = _STOPPING
 
-            self.ui.shutdown()
+            # The logic is shut down before the UI. That means, the UI has to know
+            # that it shouldn't use the logic anymore. Therefor, 'shutdown' should always
+            # be called by the UI.
             self.shutdown_impl()
             self._logic_thread.join()
+
+            # The UI should be stopped after the logic, so error messages can still be displayed
+            # in case of errors occurring while shutting down the logic.
+            self.ui.shutdown()
 
             self._abstract_logic_state = _STOPPED
 

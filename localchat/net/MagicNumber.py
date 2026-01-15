@@ -43,8 +43,7 @@ class MagicNumber:
         :return:
         """
         b = read_exact(input_stream, MagicNumber._LENGTH)
-        other_num = int.from_bytes(b, byteorder='big', signed=True)
-        if other_num != self._number:
+        if b != self._bytes:
             raise IOError("incorrect magic number")
 
     def __eq__(self, other):
@@ -53,3 +52,5 @@ class MagicNumber:
         return other._number == self._number
     def __ne__(self, other):
         return not self.__eq__(other)
+    def __hash__(self):
+        return hash(self._number)

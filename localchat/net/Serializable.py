@@ -7,7 +7,6 @@ class Serializable:
     """
     Every class that implements 'Serializable' also needs to have its own 'MAGIC' variable.
     Every MagicNumber created has to be unique.
-    (The static variable 'MAGIC' is used in 'serialize' and 'validate_magic'.)
     """
     MAGIC: MagicNumber = MagicNumber(0)
 
@@ -18,10 +17,6 @@ class Serializable:
         :param output_stream: destination of the serialized object
         :return:
         """
-        if self.MAGIC == Serializable.MAGIC:
-            raise RuntimeError("magic number must be overwritten by child class")
-
-        self.MAGIC.write(output_stream)
         self.serialize_impl(output_stream)
 
     def serialize_impl(self, output_stream: BinaryIOBase):
@@ -34,6 +29,19 @@ class Serializable:
 
     @classmethod
     @final
+    def write_magic(cls, output_stream: BinaryIOBase):
+        """
+        :raises IOError: if the magic number is invalid or if an IOError
+            occurs while reading from the stream.
+        :param output_stream: the stream the magic number is written to'
+        """
+        if cls.MAGIC == Serializable.MAGIC:
+            raise RuntimeError("magic number must be overwritten by child class")
+
+        cls.MAGIC.write(output_stream)
+
+    @classmethod
+    @final
     def validate_magic(cls, input_stream: BinaryIOBase):
         """
         :raises IOError: if the magic number is invalid or if an IOError
@@ -42,4 +50,5 @@ class Serializable:
         """
         if cls.MAGIC == Serializable.MAGIC:
             raise RuntimeError("magic number must be overwritten by child class")
+
         cls.MAGIC.read_and_compare(input_stream)

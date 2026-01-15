@@ -12,9 +12,8 @@ class SerializableUUID(Serializable):
     def serialize_impl(self, output_stream: BinaryIOBase):
         output_stream.write(self.value.bytes)
 
-    @classmethod
-    def deserialize(cls, input_stream: BinaryIOBase) -> 'SerializableUUID':
-        cls.validate_magic(input_stream)
+    @staticmethod
+    def deserialize(input_stream: BinaryIOBase) -> 'SerializableUUID':
         b = read_exact(input_stream, 16)
         value = UUID(bytes=b)
         return SerializableUUID(value)

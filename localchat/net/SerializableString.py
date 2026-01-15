@@ -14,9 +14,8 @@ class SerializableString(Serializable):
         output_stream.write(b_len_bytes)
         output_stream.write(b)
 
-    @classmethod
-    def deserialize(cls, input_stream: BinaryIOBase, max_size : int) -> 'SerializableString':
-        cls.validate_magic(input_stream)
+    @staticmethod
+    def deserialize(input_stream: BinaryIOBase, max_size : int) -> 'SerializableString':
         b_len_bytes = read_exact(input_stream, 8)
         b_len = int.from_bytes(b_len_bytes, "big")
         MAX_BYTES = max_size * 4

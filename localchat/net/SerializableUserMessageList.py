@@ -61,14 +61,12 @@ class SerializableUserMessageList(Serializable):
             serial_message_message.serialize(output_stream)
             serial_message_timestamp.serialize(output_stream)
 
-    @classmethod
+    @staticmethod
     def deserialize(
-            cls, input_stream: BinaryIOBase,
+            input_stream: BinaryIOBase,
             max_user_count: int,
             max_message_count: int
     ) -> 'SerializableUserMessageList':
-        cls.validate_magic(input_stream)
-
         version_bytes = read_exact(input_stream, 8)
         version = int.from_bytes(version_bytes, 'big')
         if version & 0xFFFF_0000_0000_0000 != 0x0001_0000_0000_0000:

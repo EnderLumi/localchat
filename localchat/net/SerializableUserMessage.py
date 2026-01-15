@@ -1,6 +1,6 @@
 from localchat.util import UserMessage, User, BinaryIOBase
 from localchat.net import Serializable, MagicNumber, SerializableUser, SerializableFloat, SerializableString
-from localchat.config.limits import MAX_USER_NAME_LENGTH
+from localchat.config.limits import MAX_MESSAGE_LENGTH
 
 
 class SerializableUserMessage(UserMessage,Serializable):
@@ -30,11 +30,10 @@ class SerializableUserMessage(UserMessage,Serializable):
         serial_message.serialize(output_stream)
         serial_timestamp.serialize(output_stream)
 
-    @classmethod
-    def deserialize(cls, input_stream: BinaryIOBase) -> 'SerializableUserMessage':
-        cls.validate_magic(input_stream)
+    @staticmethod
+    def deserialize(input_stream: BinaryIOBase) -> 'SerializableUserMessage':
         serial_sender = SerializableUser.deserialize(input_stream)
-        serial_message = SerializableString.deserialize(input_stream, MAX_USER_NAME_LENGTH) #Jonas: warum MAX_USER_NAME_LENGTH bei einer Message?
+        serial_message = SerializableString.deserialize(input_stream, MAX_MESSAGE_LENGTH)
         serial_timestamp = SerializableFloat.deserialize(input_stream)
         return SerializableUserMessage(serial_sender, serial_message.value, serial_timestamp.value)
 

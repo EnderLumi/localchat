@@ -23,9 +23,8 @@ class SerializableFloat(Serializable):
         output_stream.write(left_bytes)
         output_stream.write(right_bytes)
 
-    @classmethod
-    def deserialize(cls, input_stream: BinaryIOBase) -> 'SerializableFloat':
-        cls.validate_magic(input_stream)
+    @staticmethod
+    def deserialize(input_stream: BinaryIOBase) -> 'SerializableFloat':
         left_bytes = read_exact(input_stream, 8)
         right_bytes = read_exact(input_stream, 8)
         left = int.from_bytes(left_bytes,"big",signed=True)

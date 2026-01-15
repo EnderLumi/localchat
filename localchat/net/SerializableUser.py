@@ -27,17 +27,11 @@ class SerializableUser(User,Serializable):
     def serialize_impl(self, output_stream: BinaryIOBase):
         serial_uuid = SerializableUUID(self._id)
         serial_name = SerializableString(self._name)
-
-        """
-        TODO: Werden die Serializierten Objecte absichtilich nicht serializiert?
-        ich glaube es fehlt:
         serial_uuid.serialize(output_stream)
         serial_name.serialize(output_stream)
-        """
 
-    @classmethod
-    def deserialize(cls, input_stream: BinaryIOBase) -> 'SerializableUser':
-        cls.validate_magic(input_stream)
+    @staticmethod
+    def deserialize(input_stream: BinaryIOBase) -> 'SerializableUser':
         serial_uuid = SerializableUUID.deserialize(input_stream)
         serial_name = SerializableString.deserialize(input_stream, MAX_USER_NAME_LENGTH)
         return SerializableUser(serial_uuid.value, serial_name.value)

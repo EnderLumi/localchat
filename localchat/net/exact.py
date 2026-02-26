@@ -1,7 +1,7 @@
 from localchat.util import BinaryIOBase
 
 
-def readinto_exact(input_stream: BinaryIOBase, buffer : bytearray|memoryview[int]):
+def readinto_exact(input_stream: BinaryIOBase, buffer : bytearray|memoryview):
     """
     Fills the given buffer with bytes from the given stream.
     :param input_stream: the stream where bytes are read from
@@ -29,4 +29,4 @@ def readinto_exact(input_stream: BinaryIOBase, buffer : bytearray|memoryview[int
 def read_exact(input_stream: BinaryIOBase, n : int) -> bytes:
     buffer = bytearray(n)
     readinto_exact(input_stream, buffer)
-    return buffer
+    return bytes(buffer)

@@ -31,9 +31,17 @@ class SerializableUserMessageList(Serializable):
         self.items: list[UserMessage] = []
 
     def serialize_impl(self, output_stream: BinaryIOBase):
-        users: set[User] = set()
-        for sender in [message.sender() for message in self.items[::-1]]:
-            users.add(sender)
+        #users: set[User] = set()
+        #for sender in [message.sender() for message in self.items[::-1]]:
+        #    users.add(sender)
+        users: list[User] = []
+        known_users: set[User] = set()
+        for message in self.items:
+            sender = message.sender()
+            if sender in known_users:
+                continue
+            known_users.add(sender)
+            users.append(sender)
 
         version = 0x0001_0000_0000_0000
         version_bytes = version.to_bytes(8, 'big')
@@ -88,7 +96,7 @@ class SerializableUserMessageList(Serializable):
         for i in range(message_count):
             user_index_bytes = read_exact(input_stream, 8)
             user_index = int.from_bytes(user_index_bytes, 'big')
-            if user_index > max_user_index:
+            if user_index >= max_user_index:
                 raise IOError("invalid message sender index")
             message_sender = index_to_user[user_index]
             serial_message_message = SerializableString.deserialize(input_stream, MAX_MESSAGE_LENGTH)

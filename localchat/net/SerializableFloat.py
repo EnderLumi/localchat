@@ -15,7 +15,7 @@ class SerializableFloat(Serializable):
             left = 1 if self.value > 0 else 2
         elif math.isnan(self.value):
             right = 0
-            left = 2
+            left = 3
         else:
             left, right = self.value.as_integer_ratio()
         left_bytes = left.to_bytes(8,"big",signed=True)
@@ -36,10 +36,6 @@ class SerializableFloat(Serializable):
             else: raise IOError("float is not a valid value")
         else:
             value = left / right
-
-            """
-            könnte zu einem fehler kommen wenn durch 0 geteilt wird, oder zu einem overflow, wenn die daten korrupt sind.
-            """
 
         return SerializableFloat(value)
 

@@ -1,6 +1,7 @@
+from abc import ABC, abstractmethod
 
 
-class UI:
+class UI(ABC):
     """
     Die UI-Klasse ist eine austauschbare Komponente, die
     die Kommunikation zwischen der Client-Logik und dem
@@ -22,9 +23,13 @@ class UI:
     Dann kann die Client-UI ihre Arbeit einstellen.
     """
 
-    def __init__(self): ...
+    #def __init__(self): ...
+    def __init__(self):
+        super().__init__()
 
+    @abstractmethod
     def set_logic(self, logic : object): ...
-
+    @abstractmethod
     def start(self) -> None: ...
+    @abstractmethod
     def shutdown(self) -> None: ...

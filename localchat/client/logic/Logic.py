@@ -1,5 +1,5 @@
 from localchat.util import Chat, ChatInformation, BinaryIOBase
-
+from abc import ABC, abstractmethod
 
 class Logic:
     """
@@ -27,8 +27,11 @@ class Logic:
     und stoppt.
     """
 
-    def __init__(self): ...
+    #def __init__(self): ...
+    def __init__(self):
+        super().__init__()
 
+    @abstractmethod
     def start(self):
         """
         Start the localchat client logic.
@@ -38,6 +41,8 @@ class Logic:
         :return:
         :raises RuntimeError: if logic was already started
         """
+
+    @abstractmethod
     def shutdown(self):
         """
         Terminates the localchat client logic.
@@ -45,6 +50,7 @@ class Logic:
         :raises RuntimeError: if logic has not been started or was already terminated
         """
 
+    @abstractmethod
     def set_ui(self, ui : object):
         """
         Sets the UI that is used for the localchat client.
@@ -53,6 +59,8 @@ class Logic:
         :return:
         :raises RuntimeError: if logic was already started
         """
+
+    @abstractmethod
     def ui_initialized(self):
         """
         Signals to the localchat client logic that the UI has been initialized.
@@ -61,6 +69,7 @@ class Logic:
         :raises RuntimeError: if logic has not been started
         """
 
+    @abstractmethod
     def create_chat(self, info: ChatInformation, online : bool, port: int) -> Chat:
         """
         Creates a new chat.
@@ -70,6 +79,8 @@ class Logic:
         :return:
         :raises IOError: if an I/O error occurs while creating the chat
         """
+
+    @abstractmethod
     def load_chat(self, input_stream: BinaryIOBase, online : bool, port: int) -> Chat:
         """
         Loads a chat from a stream.
@@ -80,12 +91,16 @@ class Logic:
         :raises IOError: if an I/O error occurs while loading the chat
         :raises NotImplementedError: if this function is not implemented
         """
+
+    @abstractmethod
     def search_server(self) -> list[Chat]:
         """
         Searches for chat servers.
         :return:
         :raises IOError: if an I/O error occurs while searching for servers
         """
+
+    @abstractmethod
     def get_system_chat(self) -> Chat:
         """
         Returns a chat where messages by the localchat client application are posted and where

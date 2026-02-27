@@ -17,7 +17,7 @@ Befehle:
 - /join [servername]			     server beitreten
 - /leave						     verlässt den aktuellen server
 - /list							     Teilnehmer oder (Server anzeigen wenn nicht in aktivem chat)
-- /newhost [username / ip & port]	 Hostübergabe (only Host)
+- /new host [username / ip & port]	 Hostübergabe (only Host)
 - /myColor [blue/yellow/etc./HEX]    Username Farbe (evlt. wenn möglich)
 - /rename							 Name ändern (alle 7 Tage)
 - /info [name/servername]			 metadaten wie ip, Port und ehemalige Namen

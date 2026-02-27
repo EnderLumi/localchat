@@ -78,6 +78,15 @@ class Logic(ABC):
 
     # Membership and roles
     @abstractmethod
+    def register_member(self, user: User, role: Role = Role.MEMBER):
+        """
+        Registers a connected member in server state.
+        Implementations should enforce ban/lock rules.
+        :raises PermissionError: if join is not permitted
+        :raises IOError:
+        """
+
+    @abstractmethod
     def list_members(self) -> list[User]: ...
 
     @abstractmethod

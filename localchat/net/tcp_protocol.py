@@ -1,7 +1,7 @@
 from io import BytesIO
 from socket import socket
 
-from localchat.config.limits import MAX_MESSAGE_LENGTH
+from localchat.config.limits import MAX_MESSAGE_LENGTH, MAX_TCP_PACKET_SIZE
 from localchat.net import SerializableString, SerializableUser, SerializableUserMessage, SerializableUUID
 from localchat.util import User, UserMessage
 
@@ -21,7 +21,7 @@ PT_S_PRIVATE = 105
 PT_S_ERROR = 120
 
 
-def recv_packet(sock: socket, max_payload_size: int = 16 * 1024 * 1024) -> bytes:
+def recv_packet(sock: socket, max_payload_size: int = MAX_TCP_PACKET_SIZE) -> bytes:
     length_bytes = _recv_exact_socket(sock, 4)
     payload_len = int.from_bytes(length_bytes, "big")
     if payload_len <= 0 or payload_len > max_payload_size:

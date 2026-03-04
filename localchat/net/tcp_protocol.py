@@ -1,0 +1,135 @@
+from io import BytesIO
+from socket import socket
+
+from localchat.config.limits import MAX_MESSAGE_LENGTH
+from localchat.net import SerializableString, SerializableUser, SerializableUserMessage, SerializableUUID
+from localchat.util import User, UserMessage
+
+
+# Client -> server packet types
+PT_C_JOIN = 1
+PT_C_PUBLIC = 2
+PT_C_PRIVATE = 3
+PT_C_LEAVE = 4
+
+# Server -> client packet types
+PT_S_USER_JOINED = 101
+PT_S_USER_LEFT = 102
+PT_S_USER_BECAME_HOST = 103
+PT_S_PUBLIC = 104
+PT_S_PRIVATE = 105
+PT_S_ERROR = 120
+
+
+def recv_packet(sock: socket, max_payload_size: int = 16 * 1024 * 1024) -> bytes:
+    length_bytes = _recv_exact_socket(sock, 4)
+    payload_len = int.from_bytes(length_bytes, "big")
+    if payload_len <= 0 or payload_len > max_payload_size:
+        raise IOError("invalid payload size")
+    payload = _recv_exact_socket(sock, payload_len)
+    return payload
+
+
+def send_packet(sock: socket, payload: bytes):
+    payload_len = len(payload)
+    if payload_len <= 0:
+        raise ValueError("payload must not be empty")
+    sock.sendall(payload_len.to_bytes(4, "big") + payload)
+
+
+def _recv_exact_socket(sock: socket, n: int) -> bytes:
+    chunks: list[bytes] = []
+    bytes_left = n
+    while bytes_left > 0:
+        chunk = sock.recv(bytes_left)
+        if chunk == b"":
+            ex = EOFError("unexpected EOF while reading packet")
+            raise IOError() from ex
+        chunks.append(chunk)
+        bytes_left -= len(chunk)
+    return b"".join(chunks)
+
+
+def _build_payload(packet_type: int, body: bytes = b"") -> bytes:
+    if packet_type < 0 or packet_type > 255:
+        raise ValueError("packet type out of range")
+    return bytes([packet_type]) + body
+
+
+def encode_join(user: User) -> bytes:
+    buffer = BytesIO()
+    SerializableUser.create_copy(user).serialize(buffer)
+    return _build_payload(PT_C_JOIN, buffer.getvalue())
+
+
+def encode_public_message(message: str) -> bytes:
+    buffer = BytesIO()
+    SerializableString(message).serialize(buffer)
+    return _build_payload(PT_C_PUBLIC, buffer.getvalue())
+
+
+def encode_private_message(recipient_id, message: str) -> bytes:
+    buffer = BytesIO()
+    SerializableUUID(recipient_id).serialize(buffer)
+    SerializableString(message).serialize(buffer)
+    return _build_payload(PT_C_PRIVATE, buffer.getvalue())
+
+
+def encode_leave() -> bytes:
+    return _build_payload(PT_C_LEAVE)
+
+
+def encode_server_public_message(user_message: UserMessage) -> bytes:
+    buffer = BytesIO()
+    SerializableUserMessage.create_copy(user_message).serialize(buffer)
+    return _build_payload(PT_S_PUBLIC, buffer.getvalue())
+
+
+def encode_server_private_message(user_message: UserMessage) -> bytes:
+    buffer = BytesIO()
+    SerializableUserMessage.create_copy(user_message).serialize(buffer)
+    return _build_payload(PT_S_PRIVATE, buffer.getvalue())
+
+
+def encode_server_user_joined(user: User) -> bytes:
+    buffer = BytesIO()
+    SerializableUser.create_copy(user).serialize(buffer)
+    return _build_payload(PT_S_USER_JOINED, buffer.getvalue())
+
+
+def encode_server_user_left(user: User) -> bytes:
+    buffer = BytesIO()
+    SerializableUser.create_copy(user).serialize(buffer)
+    return _build_payload(PT_S_USER_LEFT, buffer.getvalue())
+
+
+def encode_server_user_became_host(user: User) -> bytes:
+    buffer = BytesIO()
+    SerializableUser.create_copy(user).serialize(buffer)
+    return _build_payload(PT_S_USER_BECAME_HOST, buffer.getvalue())
+
+
+def encode_server_error(message: str) -> bytes:
+    buffer = BytesIO()
+    SerializableString(message).serialize(buffer)
+    return _build_payload(PT_S_ERROR, buffer.getvalue())
+
+
+def decode_client_packet(payload: bytes) -> tuple[int, BytesIO]:
+    if len(payload) < 1:
+        raise IOError("empty packet")
+    return payload[0], BytesIO(payload[1:])
+
+
+def decode_join(body_stream: BytesIO) -> SerializableUser:
+    return SerializableUser.deserialize(body_stream)
+
+
+def decode_public_message(body_stream: BytesIO) -> str:
+    return SerializableString.deserialize(body_stream, MAX_MESSAGE_LENGTH).value
+
+
+def decode_private_message(body_stream: BytesIO) -> tuple[SerializableUUID, str]:
+    recipient = SerializableUUID.deserialize(body_stream)
+    message = SerializableString.deserialize(body_stream, MAX_MESSAGE_LENGTH).value
+    return recipient, message

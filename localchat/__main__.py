@@ -1,176 +1,77 @@
-# localchat/__main__.py:
-# CLI Entry point for localchat
-# Run with: localchat start   or    from the right dir with: python3 -m localchat
-
+import argparse
 import sys
+from uuid import uuid4
 
-from localchat.client.logicImpl.testing.TestLogic import TestLogic
-from localchat.client.UIImpl.simple.SimpleUI import SimpleUI
+from localchat.client.UIImpl.simple import SimpleUI
+from localchat.client.logicImpl import TcpChatInformation, TcpClientLogic
+from localchat.client.logicImpl.testing import TestLogic
+from localchat.config.defaults import DEFAULT_HOST, DEFAULT_PORT
 
-from localchat.config.defaults import DEFAULT_PORT
+
+def _build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(prog="localchat", description="localchat CLI")
+    sub = parser.add_subparsers(dest="command")
+
+    start = sub.add_parser("start", help="start localchat")
+    start.add_argument(
+        "--mode",
+        choices=["tcp", "test"],
+        default="tcp",
+        help="runtime mode (default: tcp)",
+    )
+    start.add_argument(
+        "--server-host",
+        default=DEFAULT_HOST,
+        help="bootstrap server host for tcp mode (default: 0.0.0.0)",
+    )
+    start.add_argument(
+        "--server-port",
+        type=int,
+        default=DEFAULT_PORT,
+        help=f"bootstrap server port for tcp mode (default: {DEFAULT_PORT})",
+    )
+    start.add_argument(
+        "--server-name",
+        default="default-server",
+        help="bootstrap server name shown in server search for tcp mode",
+    )
+
+    return parser
 
 
-def main():
+def _wire_and_run(logic) -> int:
     ui = SimpleUI()
-    logic = TestLogic()
     logic.set_ui(ui)
     ui.set_logic(logic)
-
     logic.start()
-    return
-
-"""
-    print("____LOCALCHAT____") #das muss noch ihrgendwie cooler
-
-    username = get_user_name()
-    print("Registered as: " + username)
-    if username.startswith("New User"):
-        new_name = input("Enter a name: ").strip()
-        if new_name:
-            set_user_name(new_name)
-            username = new_name
-        print(f"Your name is now: {username}")
-
-    try:
-        import prompt_toolkit
-        use_prompt_toolkit = True
-    except ImportError:
-        use_prompt_toolkit = False
-        print("\n[Info] prompt_toolkit not installed –> using simple interface")
-        print("       (Optional) Install with: pip3 install prompt_toolkit")
+    return 0
 
 
-    print("\nScan for available servers on the local network...")
-    discovery = ServerDiscovery()
-    #discovery.start()
-    #time.sleep(2.5)
-    #discovery.stop()
-    discovery.scan()
-    servers = discovery.list_servers()
+def main(argv: list[str] | None = None) -> int:
+    parser = _build_parser()
+    args = parser.parse_args(argv if argv is not None else sys.argv[1:])
 
-    if servers:
-        print("\nAvailable servers:")
-        for i, (name, addr) in enumerate(servers, start=1):
-            print(f"[{i}] {name} ({addr})")
-    else:
-        print("No servers found")
+    command = args.command or "start"
+    if command != "start":
+        parser.error("unsupported command")
 
-    print("\nOptions:")
-    print("  [N] Start new server")
-    print("  [Z] Join server via IP")
-    print("  [1–n] Join found server")
+    if args.mode == "test":
+        logic = TestLogic()
+        return _wire_and_run(logic)
 
-    choice = input("Enter a choice: ").strip().lower()
+    if args.server_port <= 0 or args.server_port > 65535:
+        parser.error("--server-port must be in range 1..65535")
 
-    # starts a new server
-    if choice == "n":
-        server_name = input("Enter a server name: ").strip() or f"{username}'s Server"
-        print(f"Starting server '{server_name}' ...")
+    logic = TcpClientLogic()
+    bootstrap_info = TcpChatInformation(
+        uuid4(),
+        args.server_name,
+        args.server_host,
+        args.server_port,
+    )
+    logic.create_chat(bootstrap_info, online=True, port=args.server_port)
+    return _wire_and_run(logic)
 
-        server = ChatServer(port = DEFAULT_PORT)
-        server.start()
-
-        responder = ServerResponder(name = server_name)
-        responder.start()
-
-        #announcer = ServerAnnouncer(name = server_name)
-        #announcer.start()
-
-        print(f"Server '{server_name}' is running. Clients can now join")
-        print("Type /exit to stop.")
-
-        # Host joins as a client itself
-        client = ChatClient(username)
-        client.connect()
-
-        ui = ServerInterface(client, use_prompt_toolkit)
-        ui.start()
-
-        # (I want to change it to a server_interface)
-        #ui = ChatInterface(client, use_prompt_toolkit)
-        #ui.start()
-
-        #chat_loop(client, use_prompt_toolkit)
-
-        client.close()
-        #announcer.stop()
-        responder.stop()
-        server.stop()
-        print("\n[SERVER] Closed.")
-
-
-    # joins Server via IP
-    elif choice == "z":
-        host = input("IP address: ").strip() or "127.0.0.1"
-        port = DEFAULT_PORT
-        print(f"Connected with {host}:{port}")
-        print("Type /exit to stop.")
-
-        client = ChatClient(username, host = host, port = port)
-        client.connect()
-
-        ui = ServerInterface(client, use_prompt_toolkit)
-        ui.start()
-
-        #chat_loop(client, use_prompt_toolkit)
-        client.close()
-
-
-    # joins Server via [number]
-    elif choice.isnumeric():
-        try:
-            index = int(choice) -1
-            if 0 <= index < len(servers):
-                name, addr = servers[index]
-                port = DEFAULT_PORT
-                print(f"Connecting to {name} ({addr}) ...")
-                print("Type /exit to stop.")
-
-                client = ChatClient(username, host = addr, port = port)
-                client.connect()
-
-                ui = ChatInterface(client, use_prompt_toolkit)
-                ui.start()
-
-                #chat_loop(client, use_prompt_toolkit)
-                client.close()
-            else:
-                print("Invalid choice.")
-        except ValueError:
-            print("Invalid choice.")
-
-    else:
-        print("Invalid choice.")
-"""
-"""
-def chat_loop(client, use_prompt_toolkit):
-    if use_prompt_toolkit:
-        from prompt_toolkit import PromptSession
-        from prompt_toolkit.patch_stdout import patch_stdout
-
-        session = PromptSession('> ')
-        try:
-            with patch_stdout():
-                while True:
-                    msg = session.prompt()
-                    if msg.lower() in ("/exit", "/quit", "/leave", "/close"):
-                        break
-                    client.send_message(msg)
-        except KeyboardInterrupt:
-            pass
-    else:
-        try:
-            while True:
-                msg = input()
-                if msg.lower() in ("/exit", "/quit", "/leave", "/close"):
-                    break
-                client.send_message(msg)
-        except KeyboardInterrupt:
-            pass
-"""
 
 if __name__ == "__main__":
-    if True: # len(sys.argv) > 1 and sys.argv[1] == "start":
-        main()
-    else:
-        print("Try use: localchat start")
+    raise SystemExit(main())

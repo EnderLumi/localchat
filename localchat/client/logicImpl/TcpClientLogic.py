@@ -5,6 +5,7 @@ from threading import RLock
 from uuid import UUID, uuid4
 
 from localchat.client.logicImpl import AbstractChat, AbstractLogic, TcpChat
+from localchat.net.discovery import DiscoveryScanner, UdpBroadcastDiscoveryScanner
 from localchat.util import BinaryIOBase, Chat, ChatInformation, User
 
 
@@ -88,11 +89,12 @@ class TcpClientLogic(AbstractLogic):
     Keeps UI decoupled from transport details and manages TcpChat instances.
     """
 
-    def __init__(self):
+    def __init__(self, discovery_scanner: DiscoveryScanner | None = None):
         super().__init__()
         self._lock = RLock()
         self._system_chat = _SystemChat()
         self._known_chats: list[Chat] = []
+        self._discovery_scanner = discovery_scanner if discovery_scanner is not None else UdpBroadcastDiscoveryScanner()
 
     def start_impl(self):
         # v0 does not require a long-running background loop in client logic.
@@ -126,8 +128,28 @@ class TcpClientLogic(AbstractLogic):
         raise NotImplementedError()
 
     def search_server(self) -> list[Chat]:
-        # Discovery integration will populate this list.
+        discovered = self._discovery_scanner.scan()
         with self._lock:
+            by_chat_id: dict[UUID, Chat] = {
+                chat.get_chat_info().get_id(): chat
+                for chat in self._known_chats
+            }
+            for server in discovered:
+                if server.server_id in by_chat_id:
+                    continue
+                info = TcpChatInformation(
+                    server.server_id,
+                    server.server_name,
+                    server.host,
+                    server.port,
+                )
+                by_chat_id[server.server_id] = TcpChat(
+                    info.get_id(),
+                    info.get_name(),
+                    str(info.get_ip_address()),
+                    info.get_port(),
+                )
+            self._known_chats = list(by_chat_id.values())
             return list(self._known_chats)
 
     def get_system_chat(self) -> Chat:

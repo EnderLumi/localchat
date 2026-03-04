@@ -5,3 +5,4 @@ from . import test_SerializableValidation
 from . import test_TcpChatErrors
 from . import test_TcpChatPath
 from . import test_TcpProtocolCodec
+from . import discovery

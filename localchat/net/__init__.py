@@ -11,3 +11,4 @@ from .SerializableList import SerializableList
 from .SerializableChatInformation import SerializableChatInformation
 from .SerializableUserMessageList import SerializableUserMessageList
 from . import tcp_protocol
+from . import discovery

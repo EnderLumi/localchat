@@ -6,6 +6,7 @@ from threading import Lock, Thread
 from uuid import UUID
 
 from localchat.config.defaults import DEFAULT_HOST, DEFAULT_PORT
+from localchat.net.discovery import DiscoveredServer, UdpBroadcastDiscoveryResponder
 from localchat.net import tcp_protocol
 from localchat.server.logicImpl.AbstractLogic import AbstractLogic
 from localchat.util import Role, User, UserMessage
@@ -35,12 +36,17 @@ class TcpServerLogic(AbstractLogic):
         super().__init__()
         self._host = host
         self._port = port
+        self._password: str | None = None
         self._listener: socket | None = None
         self._accept_thread: Thread | None = None
         self._accept_running = False
         self._sessions_lock = Lock()
         self._sessions_by_user_id: dict[UUID, _Session] = {}
         self._sessions_without_user: list[_Session] = []
+        self._discovery_responder = UdpBroadcastDiscoveryResponder(
+            snapshot_provider=self._discovery_snapshot,
+            bind_host=self._host,
+        )
 
         self.on_member_joined().add_listener(
             _SendUserEventToClients(self, tcp_protocol.encode_server_user_joined)
@@ -60,10 +66,14 @@ class TcpServerLogic(AbstractLogic):
 
         self._listener = listener
         self._accept_running = True
+        with self._lock:
+            self._server_info.set_port(self._port)
         self._accept_thread = Thread(target=self._accept_loop, name="localchat tcp accept loop", daemon=True)
         self._accept_thread.start()
+        self._discovery_responder.start()
 
     def _on_stop_impl(self):
+        self._discovery_responder.stop()
         self._accept_running = False
         if self._listener is not None:
             try:
@@ -195,8 +205,17 @@ class TcpServerLogic(AbstractLogic):
         self._send_to_session(recipient, payload)
 
     def _set_server_password_impl(self, new_password: str | None):
-        # Password verification is not part of the first TCP slice.
-        return
+        self._password = new_password
+
+    def _discovery_snapshot(self) -> DiscoveredServer:
+        info = self.get_server_info()
+        return DiscoveredServer(
+            server_id=info.get_id(),
+            server_name=info.get_name(),
+            host=self._host,
+            port=self._port,
+            requires_password=self._password is not None,
+        )
 
     def _broadcast_payload(self, payload: bytes):
         with self._sessions_lock:

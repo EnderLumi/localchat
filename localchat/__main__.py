@@ -38,14 +38,12 @@ def _build_parser() -> argparse.ArgumentParser:
 
     return parser
 
-
 def _wire_and_run(logic) -> int:
     ui = SimpleUI()
     logic.set_ui(ui)
     ui.set_logic(logic)
     logic.start()
     return 0
-
 
 def main(argv: list[str] | None = None) -> int:
     parser = _build_parser()
@@ -71,7 +69,6 @@ def main(argv: list[str] | None = None) -> int:
     )
     logic.create_chat(bootstrap_info, online=True, port=args.server_port)
     return _wire_and_run(logic)
-
 
 if __name__ == "__main__":
     raise SystemExit(main())

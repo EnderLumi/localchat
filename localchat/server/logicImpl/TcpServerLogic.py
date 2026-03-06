@@ -136,6 +136,7 @@ class TcpServerLogic(AbstractLogic):
                     session.user_id = session_user_id
                     try:
                         self._register_member_auto_role(user)
+                        self._send_to_session(session, tcp_protocol.encode_server_join_ack())
                     except PermissionError as e:
                         reason = str(e) if len(str(e)) > 0 else "join rejected"
                         self._reject_join(
@@ -250,7 +251,7 @@ class TcpServerLogic(AbstractLogic):
                 self._sessions_without_user.append(session)
         session.user_id = None
         try:
-            self._send_to_session(session, tcp_protocol.encode_server_error(code, reason))
+            self._send_to_session(session, tcp_protocol.encode_server_join_nack(code, reason))
         except IOError:
             # Connection handling stays in the main loop / finally cleanup.
             pass

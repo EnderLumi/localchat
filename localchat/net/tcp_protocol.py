@@ -13,11 +13,13 @@ PT_C_PRIVATE = 3
 PT_C_LEAVE = 4
 
 # Server -> client packet types
-PT_S_USER_JOINED = 101
-PT_S_USER_LEFT = 102
-PT_S_USER_BECAME_HOST = 103
-PT_S_PUBLIC = 104
-PT_S_PRIVATE = 105
+PT_S_USER_JOINED = 100
+PT_S_USER_LEFT = 101
+PT_S_USER_BECAME_HOST = 102
+PT_S_JOIN_ACK = 105
+PT_S_JOIN_NACK = 106
+PT_S_PUBLIC = 110
+PT_S_PRIVATE = 111
 PT_S_ERROR = 120
 
 # Structured server error codes
@@ -96,6 +98,20 @@ def encode_server_public_message(user_message: UserMessage) -> bytes:
     return _build_payload(PT_S_PUBLIC, buffer.getvalue())
 
 
+def encode_server_join_ack() -> bytes:
+    return _build_payload(PT_S_JOIN_ACK)
+
+
+def encode_server_join_nack(code: str, message: str | None = None) -> bytes:
+    if message is None:
+        message = code
+        code = ERR_GENERIC
+    buffer = BytesIO()
+    SerializableString(code).serialize(buffer)
+    SerializableString(message).serialize(buffer)
+    return _build_payload(PT_S_JOIN_NACK, buffer.getvalue())
+
+
 def encode_server_private_message(user_message: UserMessage) -> bytes:
     buffer = BytesIO()
     SerializableUserMessage.create_copy(user_message).serialize(buffer)
@@ -141,8 +157,15 @@ def decode_server_error(body_stream: BytesIO) -> tuple[str, str]:
     remaining = len(body_stream.getbuffer()) - body_stream.tell()
     if remaining == 0:
         return ERR_GENERIC, first
+    # New format contains a second string.
     second = SerializableString.deserialize(body_stream, MAX_MESSAGE_LENGTH).value
     return first, second
+
+
+def decode_server_join_nack(body_stream: BytesIO) -> tuple[str, str]:
+    code = SerializableString.deserialize(body_stream, MAX_MESSAGE_LENGTH).value
+    message = SerializableString.deserialize(body_stream, MAX_MESSAGE_LENGTH).value
+    return code, message
 
 
 def decode_client_packet(payload: bytes) -> tuple[int, BytesIO]:

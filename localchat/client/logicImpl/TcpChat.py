@@ -63,6 +63,8 @@ class _TcpUserMessage(UserMessage):
 
 
 class TcpChat(AbstractChat):
+    _JOIN_TIMEOUT_S = 2.0
+
     def __init__(self, chat_id: UUID, chat_name: str, host: str, port: int):
         super().__init__()
         self._chat_info = _TcpChatInformation(chat_id, chat_name, host, port)
@@ -100,14 +102,20 @@ class TcpChat(AbstractChat):
         try:
             sock.connect((host, port))
             self._send_packet(sock, tcp_protocol.encode_join(appearance))
+            pending_packets = self._wait_for_join_ack(sock)
         except OSError as e:
             sock.close()
             raise IOError("failed to connect/join chat") from e
+        except Exception:
+            sock.close()
+            raise
 
         with self._lock:
             self._socket = sock
             self._joined = True
             self._recv_stop.clear()
+            for packet_type, body in pending_packets:
+                self._handle_packet(packet_type, body)
             self._recv_thread = Thread(target=self._recv_loop, name=f"tcp chat recv {host}:{port}", daemon=True)
             self._recv_thread.start()
 
@@ -234,3 +242,24 @@ class TcpChat(AbstractChat):
                 tcp_protocol.send_packet(sock, payload)
         except OSError as e:
             raise IOError("failed to send packet") from e
+
+    def _wait_for_join_ack(self, sock: socket) -> list[tuple[int, object]]:
+        pending_packets: list[tuple[int, object]] = []
+        try:
+            sock.settimeout(self._JOIN_TIMEOUT_S)
+            while True:
+                payload = tcp_protocol.recv_packet(sock)
+                packet_type, body = tcp_protocol.decode_client_packet(payload)
+                if packet_type == tcp_protocol.PT_S_JOIN_ACK:
+                    return pending_packets
+                if packet_type == tcp_protocol.PT_S_JOIN_NACK:
+                    code, message = tcp_protocol.decode_server_join_nack(body)
+                    raise IOError(f"join rejected [{code}]: {message}")
+                if packet_type == tcp_protocol.PT_S_ERROR:
+                    code, message = tcp_protocol.decode_server_error(body)
+                    raise IOError(f"join failed [{code}]: {message}")
+                pending_packets.append((packet_type, body))
+        except TimeoutError as e:
+            raise IOError("join timed out waiting for server acknowledgement") from e
+        finally:
+            sock.settimeout(None)

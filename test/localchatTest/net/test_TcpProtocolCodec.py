@@ -59,6 +59,21 @@ class TestTcpProtocolCodec(TestCase):
         self.assertEqual(decoded_priv.message(), "hi")
         self.assertEqual(decoded_priv.sender().get_id(), sender.get_id())
 
+    def test_join_ack_payload(self):
+        payload = tcp_protocol.encode_server_join_ack()
+        self.assertEqual(payload[0], tcp_protocol.PT_S_JOIN_ACK)
+        self.assertEqual(len(payload), 1)
+
+    def test_join_nack_payload_roundtrip(self):
+        payload = tcp_protocol.encode_server_join_nack(
+            tcp_protocol.ERR_JOIN_REJECTED,
+            "server is locked",
+        )
+        self.assertEqual(payload[0], tcp_protocol.PT_S_JOIN_NACK)
+        code, message = tcp_protocol.decode_server_join_nack(BytesIO(payload[1:]))
+        self.assertEqual(code, tcp_protocol.ERR_JOIN_REJECTED)
+        self.assertEqual(message, "server is locked")
+
     def test_server_error_payload_structured_roundtrip(self):
         payload = tcp_protocol.encode_server_error(
             tcp_protocol.ERR_UNKNOWN_RECIPIENT,

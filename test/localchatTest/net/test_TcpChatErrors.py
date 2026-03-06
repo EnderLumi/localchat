@@ -86,10 +86,10 @@ class TestTcpChatErrors(TestCase):
         user = SerializableUser(uuid4(), "Alice")
         try:
             tcp_protocol.send_packet(client, tcp_protocol.encode_join(user))
-            # first join triggers joined event
-            _ = tcp_protocol.recv_packet(client)
+            # First join emits membership event(s) and explicit join ACK.
+            _ = self._recv_until_type(client, tcp_protocol.PT_S_JOIN_ACK)
             tcp_protocol.send_packet(client, tcp_protocol.encode_join(user))
-            payload = tcp_protocol.recv_packet(client)
+            payload = self._recv_until_type(client, tcp_protocol.PT_S_ERROR)
             self.assertEqual(payload[0], tcp_protocol.PT_S_ERROR)
             self.assertEqual(
                 self._decode_error(payload),
@@ -185,9 +185,9 @@ class TestTcpChatErrors(TestCase):
         user = SerializableUser(uuid4(), "Alice")
         try:
             tcp_protocol.send_packet(client, tcp_protocol.encode_join(user))
-            err_payload = self._recv_until_type(client, tcp_protocol.PT_S_ERROR)
+            nack_payload = self._recv_until_type(client, tcp_protocol.PT_S_JOIN_NACK)
             self.assertEqual(
-                self._decode_error(err_payload),
+                tcp_protocol.decode_server_join_nack(BytesIO(nack_payload[1:])),
                 (tcp_protocol.ERR_JOIN_REJECTED, "server is locked"),
             )
 
@@ -224,9 +224,9 @@ class TestTcpChatErrors(TestCase):
         user = SerializableUser(uuid4(), "Alice")
         try:
             tcp_protocol.send_packet(client, tcp_protocol.encode_join(user))
-            err_payload = self._recv_until_type(client, tcp_protocol.PT_S_ERROR)
+            nack_payload = self._recv_until_type(client, tcp_protocol.PT_S_JOIN_NACK)
             self.assertEqual(
-                self._decode_error(err_payload),
+                tcp_protocol.decode_server_join_nack(BytesIO(nack_payload[1:])),
                 (tcp_protocol.ERR_JOIN_FAILED, "join failed"),
             )
 

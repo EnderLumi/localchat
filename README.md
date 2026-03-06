@@ -17,6 +17,7 @@ Befehle:
 - localchat start				     soll das program starten (möglich über .whl oder so)   ✅
 - /help							     Liste und Erklärung der Befehle (auch: --help/ -h )
 - /msg [name, ..]				     privat Nachricht(en)
+- /start [servername, password]      neuen Server starten
 - /join [servername]			     server beitreten
 - /leave						     verlässt den aktuellen server
 - /list							     Teilnehmer oder (Server anzeigen wenn nicht in aktivem chat)

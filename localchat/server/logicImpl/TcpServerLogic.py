@@ -113,11 +113,14 @@ class TcpServerLogic(AbstractLogic):
                     user = serial_user
                     role = Role.HOST if len(self.list_members()) == 0 else Role.MEMBER
                     session_user_id = user.get_id()
-                    session.user_id = session_user_id
                     with self._sessions_lock:
+                        if session_user_id in self._sessions_by_user_id:
+                            self._send_to_session(session, tcp_protocol.encode_server_error("user id already in use"))
+                            continue
                         if session in self._sessions_without_user:
                             self._sessions_without_user.remove(session)
                         self._sessions_by_user_id[session_user_id] = session
+                    session.user_id = session_user_id
                     try:
                         self.register_member(user, role)
                     except Exception:
@@ -140,10 +143,18 @@ class TcpServerLogic(AbstractLogic):
                         self._send_to_session(session, tcp_protocol.encode_server_error("join first"))
                         continue
                     recipient, message = tcp_protocol.decode_private_message(body)
-                    sender = self._get_member_by_id(session.user_id)
+                    try:
+                        sender = self._get_member_by_id(session.user_id)
+                    except KeyError:
+                        self._send_to_session(session, tcp_protocol.encode_server_error("join first"))
+                        continue
                     user_message = self._make_user_message(sender, message)
+                    try:
+                        self._send_private_impl(recipient.value, user_message)
+                    except KeyError:
+                        self._send_to_session(session, tcp_protocol.encode_server_error("unknown recipient"))
+                        continue
                     self._record_private_message(user_message)
-                    self._send_private_impl(recipient.value, user_message)
                 elif packet_type == tcp_protocol.PT_C_LEAVE:
                     return
                 else:

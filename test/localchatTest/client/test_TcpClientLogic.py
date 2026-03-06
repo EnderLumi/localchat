@@ -150,3 +150,19 @@ class TestTcpClientLogic(TestCase):
         logic._known_chats.append(spy)
         logic.shutdown_impl()
         self.assertTrue(spy.left)
+
+    def test_connect_direct_creates_tcp_chat(self):
+        logic = TcpClientLogic(discovery_scanner=_DummyScanner())
+        chat = logic.connect_direct("127.0.0.1", 51121)
+        self.assertIsInstance(chat, TcpChat)
+        self.assertEqual(chat.get_chat_info().get_port(), 51121)
+        self.assertEqual(str(chat.get_chat_info().get_ip_address()), "127.0.0.1")
+
+    def test_connect_direct_validates_host_and_port(self):
+        logic = TcpClientLogic(discovery_scanner=_DummyScanner())
+        with self.assertRaises(ValueError):
+            logic.connect_direct("", 51121)
+        with self.assertRaises(ValueError):
+            logic.connect_direct("not-an-ip", 51121)
+        with self.assertRaises(ValueError):
+            logic.connect_direct("127.0.0.1", 0)

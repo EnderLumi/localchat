@@ -45,7 +45,7 @@ class CLIChatUI:
                 self._chat.join(self._appearance)
                 joined = True
             except IOError as e:
-                self._output_writer(f"I/O error while joining chat: {e}")
+                self._output_writer(self._format_join_error(e))
                 return
 
             info = self._chat.get_chat_info()
@@ -126,6 +126,17 @@ class CLIChatUI:
     def _on_connection_failure(self, error: IOError):
         self._output_writer(f"Connection lost: {error}")
         self._active = False
+
+    @staticmethod
+    def _format_join_error(error: IOError) -> str:
+        cause = error.__cause__
+        if isinstance(cause, ConnectionRefusedError):
+            return "Could not connect: connection refused by target server."
+        if isinstance(cause, TimeoutError):
+            return "Could not connect: connection timed out."
+        if isinstance(cause, OSError):
+            return f"Could not connect: network error ({cause})."
+        return f"Could not join chat: {error}"
 
     def _read_line(self, prompt: str) -> str | None:
         try:

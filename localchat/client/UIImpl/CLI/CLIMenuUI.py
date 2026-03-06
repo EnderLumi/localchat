@@ -168,18 +168,12 @@ class CLIMenuUI(AbstractUI):
         endpoint = endpoint.strip()
         host_port = self._parse_host_port(endpoint)
         if host_port is None:
-            self._output_writer("Invalid format. Expected: IP:Port")
+            self._output_writer("Invalid format. Expected: IP:Port (example: 192.168.1.42:51121)")
             return
         host, port = host_port
 
         try:
-            chat_info = _DirectConnectChatInformation(
-                chat_id=uuid4(),
-                chat_name=f"direct-{host}:{port}",
-                host=host,
-                port=port,
-            )
-            chat = self.logic.create_chat(chat_info, online=True, port=port)
+            chat = self._create_direct_chat(host, port, f"direct-{host}:{port}")
         except (IOError, ValueError) as e:
             self._output_writer(f"I/O error while creating chat: {e}")
             return
@@ -187,7 +181,7 @@ class CLIMenuUI(AbstractUI):
         self._open_chat(chat)
 
     def _start_new_server(self):
-        host_input = self._read_line(f"Bind host (Enter = {DEFAULT_HOST}): ") #wird später ersätzt mit, so das die person einfach automatisch host ist.
+        host_input = self._read_line(f"Bind host (Enter = {DEFAULT_HOST}): ")
         if host_input is None:
             return
         host = host_input.strip() or DEFAULT_HOST
@@ -221,13 +215,7 @@ class CLIMenuUI(AbstractUI):
         self._output_writer("Opening host chat session...")
 
         try:
-            chat_info = _DirectConnectChatInformation(
-                chat_id=info.get_id(),
-                chat_name=info.get_name(),
-                host=connect_host,
-                port=info.get_port(),
-            )
-            chat = self.logic.create_chat(chat_info, online=True, port=info.get_port())
+            chat = self._create_direct_chat(connect_host, info.get_port(), info.get_name())
         except (IOError, ValueError) as e:
             try:
                 server.stop()
@@ -238,6 +226,19 @@ class CLIMenuUI(AbstractUI):
 
         self._managed_servers.append(server)
         self._open_chat(chat)
+
+    def _create_direct_chat(self, host: str, port: int, chat_name: str) -> Chat:
+        connect_direct = getattr(self.logic, "connect_direct", None)
+        if callable(connect_direct):
+            return connect_direct(host, port, chat_name)
+
+        chat_info = _DirectConnectChatInformation(
+            chat_id=uuid4(),
+            chat_name=chat_name,
+            host=host,
+            port=port,
+        )
+        return self.logic.create_chat(chat_info, online=True, port=port)
 
     def _open_chat(self, chat: Chat):
         chat_ui = CLIChatUI(

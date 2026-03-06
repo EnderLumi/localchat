@@ -124,6 +124,20 @@ class TcpClientLogic(AbstractLogic):
             self._known_chats.append(chat)
         return chat
 
+    def connect_direct(self, host: str, port: int, chat_name: str | None = None) -> Chat:
+        host = host.strip()
+        if len(host) == 0:
+            raise ValueError("invalid host")
+        ip_address(host)
+        if port <= 0 or port > 65535:
+            raise ValueError("invalid port")
+
+        name = chat_name if chat_name is not None and len(chat_name) > 0 else f"direct-{host}:{port}"
+        chat = TcpChat(uuid4(), name, host, port)
+        with self._lock:
+            self._known_chats.append(chat)
+        return chat
+
     def load_chat(self, input_stream: BinaryIOBase, online: bool, port: int) -> Chat:
         raise NotImplementedError()
 

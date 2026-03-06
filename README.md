@@ -6,7 +6,10 @@ Nutzer tippt:
 localchat start
 __main__.py prüft lokale Konfigurationsdatei für Usernamen
 Client sendet UDP-Broadcast, fragt verfügbare Server ab
-Option eigenen Server starten (mit passwort) 
+Option eigenen Server starten (mit passwort)
+Beim starten wird ein link generiert z.B.: http://192.168.1.42:51121/join/room1
+Diesem link kann man dann entweder in den browser eingeben, für alle die nicht localchat installiert haben. 
+Und man kann auch /join http://192.168.1.42:8080/join/room1
 
 
 Befehle:

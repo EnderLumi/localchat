@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 from ipaddress import IPv4Address, IPv6Address, ip_address
+from socket import gaierror, gethostbyname
 from typing import Callable, Protocol
 from uuid import UUID, uuid4
 
 from localchat.client.UIImpl.AbstractUI import AbstractUI
 from localchat.client.UIImpl.CLI.CLIChatUI import CLIChatUI
 from localchat.client.UIImpl.CLI.CLISettingsUI import CLISettingsUI
+from localchat.client.parsing.join_target import parse_join_target
 from localchat.config.defaults import DEFAULT_HOST, DEFAULT_PORT
 from localchat.server.logicImpl import TcpServerLogic
 from localchat.util import Chat, ChatInformation, User
@@ -39,7 +41,7 @@ class _DirectConnectChatInformation(ChatInformation):
         super().__init__()
         self._chat_id = chat_id
         self._chat_name = chat_name
-        self._ip_address = ip_address(host)
+        self._host = host
         self._port = port
 
     def get_id(self) -> UUID:
@@ -49,7 +51,14 @@ class _DirectConnectChatInformation(ChatInformation):
         return self._chat_name
 
     def get_ip_address(self) -> IPv4Address | IPv6Address:
-        return self._ip_address
+        try:
+            return ip_address(self._host)
+        except ValueError:
+            try:
+                resolved_host = gethostbyname(self._host)
+                return ip_address(resolved_host)
+            except (gaierror, ValueError) as e:
+                raise ValueError(f"could not resolve host '{self._host}'") from e
 
     def get_port(self) -> int:
         return self._port
@@ -159,26 +168,34 @@ class CLIMenuUI(AbstractUI):
             self._output_writer("Number is out of range.")
             return
 
-        self._open_chat(self._known_servers[selected_index - 1])
+        selected_chat = self._known_servers[selected_index - 1]
+        selected_info = selected_chat.get_chat_info()
+        self._join_endpoint(
+            host=str(selected_info.get_ip_address()),
+            port=selected_info.get_port(),
+            chat_name=selected_info.get_name(),
+        )
 
     def _direct_connect(self):
-        endpoint = self._read_line("Target (IP:Port): ")
+        endpoint = self._read_line("Target (IP:Port, host:port, or URL): ")
         if endpoint is None:
             return
         endpoint = endpoint.strip()
-        host_port = self._parse_host_port(endpoint)
-        if host_port is None:
-            self._output_writer("Invalid format. Expected: IP:Port (example: 192.168.1.42:51121)")
-            return
-        host, port = host_port
-
         try:
-            chat = self._create_direct_chat(host, port, f"direct-{host}:{port}")
-        except (IOError, ValueError) as e:
-            self._output_writer(f"I/O error while creating chat: {e}")
+            join_target = parse_join_target(endpoint)
+        except ValueError as e:
+            self._output_writer(f"Invalid join target: {e}")
+            self._output_writer("Examples: 192.168.1.42:51121 or http://host:8080/join/room1")
             return
+        host = join_target.host
+        port = join_target.port
 
-        self._open_chat(chat)
+        self._join_endpoint(
+            host=host,
+            port=port,
+            chat_name=f"direct-{host}:{port}",
+            room_hint=join_target.room,
+        )
 
     def _start_new_server(self):
         host_input = self._read_line(f"Bind host (Enter = {DEFAULT_HOST}): ")
@@ -214,18 +231,38 @@ class CLIMenuUI(AbstractUI):
         self._output_writer(f"Server started on {info.get_port()} ({host}).")
         self._output_writer("Opening host chat session...")
 
-        try:
-            chat = self._create_direct_chat(connect_host, info.get_port(), info.get_name())
-        except (IOError, ValueError) as e:
+        joined = self._join_endpoint(
+            host=connect_host,
+            port=info.get_port(),
+            chat_name=info.get_name(),
+        )
+        if not joined:
             try:
                 server.stop()
             except Exception:
                 pass
-            self._output_writer(f"I/O error while creating host chat: {e}")
             return
 
         self._managed_servers.append(server)
+
+    def _join_endpoint(
+        self,
+        host: str,
+        port: int,
+        chat_name: str,
+        room_hint: str | None = None,
+    ) -> bool:
+        if room_hint is not None:
+            self._output_writer(
+                f"Join room hint detected ('{room_hint}'). TCP CLI currently uses host/port only."
+            )
+        try:
+            chat = self._create_direct_chat(host, port, chat_name)
+        except (IOError, ValueError) as e:
+            self._output_writer(f"I/O error while creating chat: {e}")
+            return False
         self._open_chat(chat)
+        return True
 
     def _create_direct_chat(self, host: str, port: int, chat_name: str) -> Chat:
         connect_direct = getattr(self.logic, "connect_direct", None)
@@ -248,27 +285,6 @@ class CLIMenuUI(AbstractUI):
             output_writer=self._output_writer,
         )
         chat_ui.run()
-
-    @staticmethod
-    def _parse_host_port(text: str) -> tuple[str, int] | None:
-        if ":" not in text:
-            return None
-        host, raw_port = text.rsplit(":", maxsplit=1)
-        host = host.strip()
-        raw_port = raw_port.strip()
-        if len(host) == 0 or len(raw_port) == 0:
-            return None
-        try:
-            ip_address(host)
-        except ValueError:
-            return None
-        try:
-            port = int(raw_port)
-        except ValueError:
-            return None
-        if port <= 0 or port > 65535:
-            return None
-        return host, port
 
     def _stop_managed_servers(self):
         servers = list(self._managed_servers)

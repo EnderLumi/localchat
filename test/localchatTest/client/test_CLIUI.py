@@ -192,6 +192,7 @@ class _DummyLogic(Logic):
         self.ui_initialized_calls = 0
         self.created_chat_info: list[ChatInformation] = []
         self.created_chats: list[_DummyChat] = []
+        self.search_results: list[Chat] = []
         self.system_chat = _DummyChat("system")
 
     def start(self):
@@ -218,7 +219,7 @@ class _DummyLogic(Logic):
         raise NotImplementedError()
 
     def search_server(self) -> list[Chat]:
-        return []
+        return list(self.search_results)
 
     def get_system_chat(self) -> Chat:
         return self.system_chat
@@ -270,6 +271,38 @@ class TestCLIUI(TestCase):
         self.assertEqual(len(logic.created_chats), 1)
         self.assertEqual(logic.created_chats[0].join_calls, 1)
         self.assertEqual(logic.created_chats[0].leave_calls, 1)
+
+    def test_cli_menu_direct_connect_accepts_url(self):
+        output = _Output()
+        reader = _Reader(["3", "http://host.local:8080/join/room1", "/leave", "0"])
+        ui = CLIMenuUI(input_reader=reader, output_writer=output)
+        logic = _DummyLogic()
+        logic.set_ui(ui)
+        ui.set_logic(logic)
+
+        ui.start()
+
+        self.assertEqual(len(logic.created_chat_info), 1)
+        self.assertEqual(logic.created_chat_info[0].get_name(), "direct-host.local:8080")
+        self.assertTrue(
+            any("Join room hint detected ('room1')" in item for item in output.items)
+        )
+
+    def test_cli_menu_search_join_uses_unified_connect_path(self):
+        output = _Output()
+        reader = _Reader(["1", "1", "/leave", "0"])
+        ui = CLIMenuUI(input_reader=reader, output_writer=output)
+        logic = _DummyLogic()
+        logic.search_results = [_DummyChat("discovered-server")]
+        logic.set_ui(ui)
+        ui.set_logic(logic)
+
+        ui.start()
+
+        self.assertEqual(len(logic.created_chat_info), 1)
+        self.assertEqual(logic.created_chat_info[0].get_name(), "discovered-server")
+        self.assertEqual(str(logic.created_chat_info[0].get_ip_address()), "127.0.0.1")
+        self.assertEqual(logic.created_chat_info[0].get_port(), 51121)
 
     def test_cli_chat_posts_message(self):
         output = _Output()

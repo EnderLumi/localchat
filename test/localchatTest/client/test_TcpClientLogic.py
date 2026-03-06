@@ -163,6 +163,9 @@ class TestTcpClientLogic(TestCase):
         with self.assertRaises(ValueError):
             logic.connect_direct("", 51121)
         with self.assertRaises(ValueError):
-            logic.connect_direct("not-an-ip", 51121)
-        with self.assertRaises(ValueError):
             logic.connect_direct("127.0.0.1", 0)
+
+    def test_connect_direct_accepts_hostname(self):
+        logic = TcpClientLogic(discovery_scanner=_DummyScanner())
+        chat = logic.connect_direct("localhost", 51121)
+        self.assertIsInstance(chat, TcpChat)

@@ -128,7 +128,6 @@ class TcpClientLogic(AbstractLogic):
         host = host.strip()
         if len(host) == 0:
             raise ValueError("invalid host")
-        ip_address(host)
         if port <= 0 or port > 65535:
             raise ValueError("invalid port")
 

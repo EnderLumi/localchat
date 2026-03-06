@@ -1,3 +1,3 @@
 from .AbstractUI import AbstractUI
-from . import simple
 from . import CLI
+from . import simple

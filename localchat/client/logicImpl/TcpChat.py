@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from ipaddress import IPv4Address, IPv6Address, ip_address
-from socket import AF_INET, SOCK_STREAM, socket
+from socket import AF_INET, SOCK_STREAM, gaierror, gethostbyname, socket
 from threading import Event as ThreadEvent, Lock, Thread
 from time import time
 from uuid import UUID
@@ -28,13 +28,23 @@ class _TcpChatInformation(ChatInformation):
         return self._name
 
     def get_ip_address(self) -> IPv4Address | IPv6Address:
-        return ip_address(self._host)
+        try:
+            return ip_address(self._host)
+        except ValueError:
+            try:
+                resolved_host = gethostbyname(self._host)
+                return ip_address(resolved_host)
+            except (gaierror, ValueError) as e:
+                raise ValueError(f"could not resolve host '{self._host}'") from e
 
     def get_port(self) -> int:
         return self._port
 
     def set_name(self, name: str):
         self._name = name
+
+    def get_host(self) -> str:
+        return self._host
 
 
 class _TcpUserMessage(UserMessage):
@@ -84,7 +94,7 @@ class TcpChat(AbstractChat):
             if self._joined:
                 return
             self._appearance = appearance
-            host = str(self._chat_info.get_ip_address())
+            host = self._chat_info.get_host()
             port = self._chat_info.get_port()
 
         sock = socket(AF_INET, SOCK_STREAM)

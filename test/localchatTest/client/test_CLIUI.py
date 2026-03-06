@@ -6,6 +6,7 @@ from uuid import UUID, uuid4
 
 from localchat.client import UI
 from localchat.client.UIImpl.CLI import CLIChatUI, CLIMenuUI, CLISettingsUI
+from localchat.config.defaults import DEFAULT_HOST, DEFAULT_PORT
 from localchat.client.logic import Logic
 from localchat.util import BinaryIOBase, Chat, ChatInformation, User, UserMessage
 from localchat.util.event import Event, EventHandler
@@ -69,6 +70,27 @@ class _DummyChatInfo(ChatInformation):
 
     def get_ip_address(self) -> IPv4Address | IPv6Address:
         return IPv4Address("127.0.0.1")
+
+    def get_port(self) -> int:
+        return self._port
+
+
+class _DummyServerInfo(ChatInformation):
+    def __init__(self, chat_id: UUID, name: str, host: str, port: int):
+        super().__init__()
+        self._chat_id = chat_id
+        self._name = name
+        self._host = host
+        self._port = port
+
+    def get_id(self) -> UUID:
+        return self._chat_id
+
+    def get_name(self) -> str:
+        return self._name
+
+    def get_ip_address(self) -> IPv4Address | IPv6Address:
+        return IPv4Address(self._host)
 
     def get_port(self) -> int:
         return self._port
@@ -202,6 +224,24 @@ class _DummyLogic(Logic):
         return self.system_chat
 
 
+class _DummyServer:
+    def __init__(self, host: str, port: int):
+        self.host = host
+        self.port = port
+        self.started = False
+        self.stopped = False
+        self._server_info = _DummyServerInfo(uuid4(), "hosted-server", "127.0.0.1", port)
+
+    def start(self):
+        self.started = True
+
+    def stop(self):
+        self.stopped = True
+
+    def get_server_info(self) -> ChatInformation:
+        return self._server_info
+
+
 class TestCLIUI(TestCase):
     def test_cli_menu_exit_calls_logic_shutdown(self):
         output = _Output()
@@ -256,3 +296,29 @@ class TestCLIUI(TestCase):
         self.assertEqual(appearance.get_name(), "Neo")
         self.assertEqual(appearance.get_id(), target_id)
         self.assertTrue(any("Invalid UUID." in item for item in output.items))
+
+    def test_cli_menu_can_start_new_server_and_shutdown_stops_it(self):
+        output = _Output()
+        reader = _Reader(["2", "", "", "/leave", "0"])
+        created: list[_DummyServer] = []
+
+        def _server_factory(host: str, port: int):
+            server = _DummyServer(host, port)
+            created.append(server)
+            return server
+
+        ui = CLIMenuUI(input_reader=reader, output_writer=output, server_factory=_server_factory)
+        logic = _DummyLogic()
+        logic.set_ui(ui)
+        ui.set_logic(logic)
+
+        ui.start()
+
+        self.assertEqual(len(created), 1)
+        self.assertEqual(created[0].host, DEFAULT_HOST)
+        self.assertEqual(created[0].port, DEFAULT_PORT)
+        self.assertTrue(created[0].started)
+        self.assertTrue(created[0].stopped)
+        self.assertEqual(len(logic.created_chat_info), 1)
+        self.assertEqual(logic.created_chat_info[0].get_name(), "hosted-server")
+        self.assertEqual(logic.created_chat_info[0].get_port(), DEFAULT_PORT)

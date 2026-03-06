@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 from ipaddress import IPv4Address, IPv6Address, ip_address
-from typing import Callable
+from typing import Callable, Protocol
 from uuid import UUID, uuid4
 
 from localchat.client.UIImpl.AbstractUI import AbstractUI
 from localchat.client.UIImpl.CLI.CLIChatUI import CLIChatUI
 from localchat.client.UIImpl.CLI.CLISettingsUI import CLISettingsUI
+from localchat.config.defaults import DEFAULT_HOST, DEFAULT_PORT
+from localchat.server.logicImpl import TcpServerLogic
 from localchat.util import Chat, ChatInformation, User
 
 
@@ -53,17 +55,26 @@ class _DirectConnectChatInformation(ChatInformation):
         return self._port
 
 
+class _ServerControl(Protocol):
+    def start(self): ...
+    def stop(self): ...
+    def get_server_info(self) -> ChatInformation: ...
+
+
 class CLIMenuUI(AbstractUI):
     def __init__(
         self,
         input_reader: Callable[[str], str] = input,
         output_writer: Callable[[str], None] = print,
+        server_factory: Callable[[str, int], _ServerControl] | None = None,
     ):
         super().__init__()
         self._input_reader = input_reader
         self._output_writer = output_writer
+        self._server_factory = server_factory if server_factory is not None else TcpServerLogic
         self._active = True
         self._known_servers: list[Chat] = []
+        self._managed_servers: list[_ServerControl] = []
         appearance_id = uuid4()
         self._appearance = _MutableUser(appearance_id, f"user-{appearance_id.hex[:8]}")
         self._settings_ui = CLISettingsUI(input_reader, output_writer)
@@ -86,7 +97,7 @@ class CLIMenuUI(AbstractUI):
                 self._search_servers()
                 continue
             if command == "2":
-                self._output_writer("Starting a new server is not yet implemented in this UI.")
+                self._start_new_server()
                 continue
             if command == "3":
                 self._direct_connect()
@@ -102,6 +113,7 @@ class CLIMenuUI(AbstractUI):
 
     def shutdown(self):
         self._active = False
+        self._stop_managed_servers()
 
     def _render_menu(self):
         self._output_writer("")
@@ -174,6 +186,59 @@ class CLIMenuUI(AbstractUI):
 
         self._open_chat(chat)
 
+    def _start_new_server(self):
+        host_input = self._read_line(f"Bind host (Enter = {DEFAULT_HOST}): ") #wird später ersätzt mit, so das die person einfach automatisch host ist.
+        if host_input is None:
+            return
+        host = host_input.strip() or DEFAULT_HOST
+
+        port_input = self._read_line(f"Port (Enter = {DEFAULT_PORT}): ")
+        if port_input is None:
+            return
+        raw_port = port_input.strip() or str(DEFAULT_PORT)
+        try:
+            port = int(raw_port)
+        except ValueError:
+            self._output_writer("Invalid port.")
+            return
+        if port <= 0 or port > 65535:
+            self._output_writer("Invalid port.")
+            return
+
+        server = self._server_factory(host, port)
+        try:
+            server.start()
+        except (IOError, OSError) as e:
+            self._output_writer(f"I/O error while starting server: {e}")
+            return
+
+        info = server.get_server_info()
+        connect_host = host
+        if host in {"0.0.0.0", "::"}:
+            connect_host = "127.0.0.1"
+
+        self._output_writer(f"Server started on {info.get_port()} ({host}).")
+        self._output_writer("Opening host chat session...")
+
+        try:
+            chat_info = _DirectConnectChatInformation(
+                chat_id=info.get_id(),
+                chat_name=info.get_name(),
+                host=connect_host,
+                port=info.get_port(),
+            )
+            chat = self.logic.create_chat(chat_info, online=True, port=info.get_port())
+        except (IOError, ValueError) as e:
+            try:
+                server.stop()
+            except Exception:
+                pass
+            self._output_writer(f"I/O error while creating host chat: {e}")
+            return
+
+        self._managed_servers.append(server)
+        self._open_chat(chat)
+
     def _open_chat(self, chat: Chat):
         chat_ui = CLIChatUI(
             chat=chat,
@@ -203,6 +268,15 @@ class CLIMenuUI(AbstractUI):
         if port <= 0 or port > 65535:
             return None
         return host, port
+
+    def _stop_managed_servers(self):
+        servers = list(self._managed_servers)
+        self._managed_servers = []
+        for server in servers:
+            try:
+                server.stop()
+            except Exception:
+                pass
 
     def _read_line(self, prompt: str) -> str | None:
         try:

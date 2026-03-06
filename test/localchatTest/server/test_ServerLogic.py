@@ -1,9 +1,10 @@
 from io import BytesIO
+from socket import AF_INET, SOCK_STREAM, socket
 from unittest import TestCase
 from uuid import uuid4
 
 from localchat.net import SerializableUser, SerializableUserMessageList
-from localchat.server.logicImpl import InMemoryLogic
+from localchat.server.logicImpl import InMemoryLogic, TcpServerLogic
 from localchat.util import Role
 from localchat.util.event import Event, EventListener
 
@@ -17,6 +18,18 @@ class _Collector(EventListener):
 
 
 class TestServerLogic(TestCase):
+    @staticmethod
+    def _find_free_port() -> int | None:
+        probe = socket(AF_INET, SOCK_STREAM)
+        try:
+            probe.bind(("127.0.0.1", 0))
+        except PermissionError:
+            probe.close()
+            return None
+        port = probe.getsockname()[1]
+        probe.close()
+        return port
+
     @staticmethod
     def _mk_user(name: str) -> SerializableUser:
         return SerializableUser(uuid4(), name)
@@ -154,3 +167,19 @@ class TestServerLogic(TestCase):
         saved = SerializableUserMessageList.deserialize(BytesIO(out.getvalue()), 100, 1000)
         self.assertEqual(len(saved.items), 1)
         self.assertEqual(saved.items[0].message(), "persist me")
+
+    def test_tcp_server_with_dynamic_port_reports_actual_bound_port(self):
+        probe_port = self._find_free_port()
+        if probe_port is None:
+            self.skipTest("local tcp sockets are not available in this environment")
+
+        logic = TcpServerLogic(host="127.0.0.1", port=0)
+        logic.start()
+        try:
+            info = logic.get_server_info()
+            self.assertGreater(info.get_port(), 0)
+            self.assertNotEqual(info.get_port(), 0)
+            snapshot = logic._discovery_snapshot()
+            self.assertEqual(snapshot.port, info.get_port())
+        finally:
+            logic.stop()

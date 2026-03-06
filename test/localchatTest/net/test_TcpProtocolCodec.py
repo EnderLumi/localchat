@@ -59,6 +59,22 @@ class TestTcpProtocolCodec(TestCase):
         self.assertEqual(decoded_priv.message(), "hi")
         self.assertEqual(decoded_priv.sender().get_id(), sender.get_id())
 
+    def test_server_error_payload_structured_roundtrip(self):
+        payload = tcp_protocol.encode_server_error(
+            tcp_protocol.ERR_UNKNOWN_RECIPIENT,
+            "unknown recipient",
+        )
+        self.assertEqual(payload[0], tcp_protocol.PT_S_ERROR)
+        code, message = tcp_protocol.decode_server_error(BytesIO(payload[1:]))
+        self.assertEqual(code, tcp_protocol.ERR_UNKNOWN_RECIPIENT)
+        self.assertEqual(message, "unknown recipient")
+
+    def test_server_error_payload_legacy_decode(self):
+        payload = tcp_protocol.encode_server_error("legacy message")
+        code, message = tcp_protocol.decode_server_error(BytesIO(payload[1:]))
+        self.assertEqual(code, tcp_protocol.ERR_GENERIC)
+        self.assertEqual(message, "legacy message")
+
     def test_build_payload_type_bounds(self):
         with self.assertRaises(ValueError):
             tcp_protocol._build_payload(-1, b"a")

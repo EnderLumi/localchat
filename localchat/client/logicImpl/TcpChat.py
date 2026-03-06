@@ -7,8 +7,7 @@ from time import time
 from uuid import UUID
 
 from localchat.client.logicImpl import AbstractChat
-from localchat.config.limits import MAX_MESSAGE_LENGTH
-from localchat.net import SerializableString, SerializableUser, SerializableUserMessage, tcp_protocol
+from localchat.net import SerializableUser, SerializableUserMessage, tcp_protocol
 from localchat.util import BinaryIOBase, ChatInformation, User, UserMessage
 from localchat.util.event import Event
 
@@ -220,7 +219,9 @@ class TcpChat(AbstractChat):
             return
 
         if packet_type == tcp_protocol.PT_S_ERROR:
-            msg = SerializableString.deserialize(body, MAX_MESSAGE_LENGTH).value
+            code, msg = tcp_protocol.decode_server_error(body)
+            if code != tcp_protocol.ERR_GENERIC:
+                msg = f"[{code}] {msg}"
             sys_msg = _TcpUserMessage(self._server_user, msg, time())
             self.on_user_send_private_message().handle(Event(chat_id, sys_msg))
             return

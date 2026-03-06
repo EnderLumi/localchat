@@ -215,6 +215,14 @@ class CLIMenuUI(AbstractUI):
         if port <= 0 or port > 65535:
             self._output_writer("Invalid port.")
             return
+        if port <= 1023:
+            self._output_writer("Port range 1-1023 is reserved/privileged. Recommended range is 49152-65535.")
+            return
+        if 1024 <= port <= 49151:
+            self._output_writer(
+                "Warning: ports 1024-49151 may conflict with well-known services. "
+                "Recommended range is 49152-65535."
+            )
 
         server = self._server_factory(host, port)
         try:

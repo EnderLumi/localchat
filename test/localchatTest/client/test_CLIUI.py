@@ -355,3 +355,48 @@ class TestCLIUI(TestCase):
         self.assertEqual(len(logic.created_chat_info), 1)
         self.assertEqual(logic.created_chat_info[0].get_name(), "hosted-server")
         self.assertEqual(logic.created_chat_info[0].get_port(), DEFAULT_PORT)
+
+    def test_cli_menu_rejects_privileged_server_port(self):
+        output = _Output()
+        reader = _Reader(["2", "", "80", "0"])
+        created: list[_DummyServer] = []
+
+        def _server_factory(host: str, port: int):
+            server = _DummyServer(host, port)
+            created.append(server)
+            return server
+
+        ui = CLIMenuUI(input_reader=reader, output_writer=output, server_factory=_server_factory)
+        logic = _DummyLogic()
+        logic.set_ui(ui)
+        ui.set_logic(logic)
+
+        ui.start()
+
+        self.assertEqual(len(created), 0)
+        self.assertTrue(
+            any("reserved/privileged" in item for item in output.items)
+        )
+
+    def test_cli_menu_warns_for_registered_port_range(self):
+        output = _Output()
+        reader = _Reader(["2", "", "2048", "/leave", "0"])
+        created: list[_DummyServer] = []
+
+        def _server_factory(host: str, port: int):
+            server = _DummyServer(host, port)
+            created.append(server)
+            return server
+
+        ui = CLIMenuUI(input_reader=reader, output_writer=output, server_factory=_server_factory)
+        logic = _DummyLogic()
+        logic.set_ui(ui)
+        ui.set_logic(logic)
+
+        ui.start()
+
+        self.assertEqual(len(created), 1)
+        self.assertEqual(created[0].port, 2048)
+        self.assertTrue(
+            any("Recommended range is 49152-65535" in item for item in output.items)
+        )

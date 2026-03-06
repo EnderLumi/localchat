@@ -20,6 +20,17 @@ PT_S_PUBLIC = 104
 PT_S_PRIVATE = 105
 PT_S_ERROR = 120
 
+# Structured server error codes
+ERR_GENERIC = "generic"
+ERR_JOIN_FIRST = "join_first"
+ERR_ALREADY_JOINED = "already_joined"
+ERR_USER_ID_IN_USE = "user_id_in_use"
+ERR_UNKNOWN_RECIPIENT = "unknown_recipient"
+ERR_UNKNOWN_PACKET_TYPE = "unknown_packet_type"
+ERR_JOIN_REJECTED = "join_rejected"
+ERR_JOIN_FAILED = "join_failed"
+ERR_DISCONNECTED = "disconnected"
+
 
 def recv_packet(sock: socket, max_payload_size: int = MAX_TCP_PACKET_SIZE) -> bytes:
     length_bytes = _recv_exact_socket(sock, 4)
@@ -109,10 +120,29 @@ def encode_server_user_became_host(user: User) -> bytes:
     return _build_payload(PT_S_USER_BECAME_HOST, buffer.getvalue())
 
 
-def encode_server_error(message: str) -> bytes:
+def encode_server_error(code: str, message: str | None = None) -> bytes:
+    if message is None:
+        message = code
+        code = ERR_GENERIC
     buffer = BytesIO()
+    SerializableString(code).serialize(buffer)
     SerializableString(message).serialize(buffer)
     return _build_payload(PT_S_ERROR, buffer.getvalue())
+
+
+def decode_server_error(body_stream: BytesIO) -> tuple[str, str]:
+    """
+    Decodes server errors.
+    Supports:
+    - structured payload: <code><message>
+    - legacy payload: <message>
+    """
+    first = SerializableString.deserialize(body_stream, MAX_MESSAGE_LENGTH).value
+    remaining = len(body_stream.getbuffer()) - body_stream.tell()
+    if remaining == 0:
+        return ERR_GENERIC, first
+    second = SerializableString.deserialize(body_stream, MAX_MESSAGE_LENGTH).value
+    return first, second
 
 
 def decode_client_packet(payload: bytes) -> tuple[int, BytesIO]:

@@ -63,11 +63,13 @@ class TcpServerLogic(AbstractLogic):
         listener.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
         listener.bind((self._host, self._port))
         listener.listen()
+        actual_port = int(listener.getsockname()[1])
 
         self._listener = listener
         self._accept_running = True
         with self._lock:
-            self._server_info.set_port(self._port)
+            self._port = actual_port
+            self._server_info.set_port(actual_port)
         self._accept_thread = Thread(target=self._accept_loop, name="localchat tcp accept loop", daemon=True)
         self._accept_thread.start()
         self._discovery_responder.start()
@@ -107,14 +109,26 @@ class TcpServerLogic(AbstractLogic):
                 packet_type, body = tcp_protocol.decode_client_packet(payload)
                 if packet_type == tcp_protocol.PT_C_JOIN:
                     if session.user_id is not None:
-                        self._send_to_session(session, tcp_protocol.encode_server_error("already joined"))
+                        self._send_to_session(
+                            session,
+                            tcp_protocol.encode_server_error(
+                                tcp_protocol.ERR_ALREADY_JOINED,
+                                "already joined",
+                            ),
+                        )
                         continue
                     serial_user = tcp_protocol.decode_join(body)
                     user = serial_user
                     session_user_id = user.get_id()
                     with self._sessions_lock:
                         if session_user_id in self._sessions_by_user_id:
-                            self._send_to_session(session, tcp_protocol.encode_server_error("user id already in use"))
+                            self._send_to_session(
+                                session,
+                                tcp_protocol.encode_server_error(
+                                    tcp_protocol.ERR_USER_ID_IN_USE,
+                                    "user id already in use",
+                                ),
+                            )
                             continue
                         if session in self._sessions_without_user:
                             self._sessions_without_user.remove(session)
@@ -124,14 +138,30 @@ class TcpServerLogic(AbstractLogic):
                         self._register_member_auto_role(user)
                     except PermissionError as e:
                         reason = str(e) if len(str(e)) > 0 else "join rejected"
-                        self._reject_join(session, session_user_id, reason)
+                        self._reject_join(
+                            session,
+                            session_user_id,
+                            tcp_protocol.ERR_JOIN_REJECTED,
+                            reason,
+                        )
                         continue
                     except Exception:
-                        self._reject_join(session, session_user_id, "join failed")
+                        self._reject_join(
+                            session,
+                            session_user_id,
+                            tcp_protocol.ERR_JOIN_FAILED,
+                            "join failed",
+                        )
                         continue
                 elif packet_type == tcp_protocol.PT_C_PUBLIC:
                     if session.user_id is None:
-                        self._send_to_session(session, tcp_protocol.encode_server_error("join first"))
+                        self._send_to_session(
+                            session,
+                            tcp_protocol.encode_server_error(
+                                tcp_protocol.ERR_JOIN_FIRST,
+                                "join first",
+                            ),
+                        )
                         continue
                     message = tcp_protocol.decode_public_message(body)
                     sender = self._get_member_by_id(session.user_id)
@@ -140,25 +170,49 @@ class TcpServerLogic(AbstractLogic):
                     self._broadcast_public_impl(user_message)
                 elif packet_type == tcp_protocol.PT_C_PRIVATE:
                     if session.user_id is None:
-                        self._send_to_session(session, tcp_protocol.encode_server_error("join first"))
+                        self._send_to_session(
+                            session,
+                            tcp_protocol.encode_server_error(
+                                tcp_protocol.ERR_JOIN_FIRST,
+                                "join first",
+                            ),
+                        )
                         continue
                     recipient, message = tcp_protocol.decode_private_message(body)
                     try:
                         sender = self._get_member_by_id(session.user_id)
                     except KeyError:
-                        self._send_to_session(session, tcp_protocol.encode_server_error("join first"))
+                        self._send_to_session(
+                            session,
+                            tcp_protocol.encode_server_error(
+                                tcp_protocol.ERR_JOIN_FIRST,
+                                "join first",
+                            ),
+                        )
                         continue
                     user_message = self._make_user_message(sender, message)
                     try:
                         self._send_private_impl(recipient.value, user_message)
                     except KeyError:
-                        self._send_to_session(session, tcp_protocol.encode_server_error("unknown recipient"))
+                        self._send_to_session(
+                            session,
+                            tcp_protocol.encode_server_error(
+                                tcp_protocol.ERR_UNKNOWN_RECIPIENT,
+                                "unknown recipient",
+                            ),
+                        )
                         continue
                     self._record_private_message(user_message)
                 elif packet_type == tcp_protocol.PT_C_LEAVE:
                     return
                 else:
-                    self._send_to_session(session, tcp_protocol.encode_server_error("unknown packet type"))
+                    self._send_to_session(
+                        session,
+                        tcp_protocol.encode_server_error(
+                            tcp_protocol.ERR_UNKNOWN_PACKET_TYPE,
+                            "unknown packet type",
+                        ),
+                    )
         except IOError:
             pass
         finally:
@@ -189,14 +243,14 @@ class TcpServerLogic(AbstractLogic):
             except Exception:
                 pass
 
-    def _reject_join(self, session: _Session, session_user_id: UUID, reason: str):
+    def _reject_join(self, session: _Session, session_user_id: UUID, code: str, reason: str):
         with self._sessions_lock:
             self._sessions_by_user_id.pop(session_user_id, None)
             if session not in self._sessions_without_user:
                 self._sessions_without_user.append(session)
         session.user_id = None
         try:
-            self._send_to_session(session, tcp_protocol.encode_server_error(reason))
+            self._send_to_session(session, tcp_protocol.encode_server_error(code, reason))
         except IOError:
             # Connection handling stays in the main loop / finally cleanup.
             pass
@@ -207,7 +261,13 @@ class TcpServerLogic(AbstractLogic):
         if session is None:
             return
         try:
-            self._send_to_session(session, tcp_protocol.encode_server_error(reason if reason else "disconnected"))
+            self._send_to_session(
+                session,
+                tcp_protocol.encode_server_error(
+                    tcp_protocol.ERR_DISCONNECTED,
+                    reason if reason else "disconnected",
+                ),
+            )
         except Exception:
             pass
         try:

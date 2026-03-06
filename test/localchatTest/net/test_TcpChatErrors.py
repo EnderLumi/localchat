@@ -4,7 +4,7 @@ from time import sleep
 from unittest import TestCase
 from uuid import uuid4
 
-from localchat.net import SerializableString, SerializableUser, SerializableUserMessage, tcp_protocol
+from localchat.net import SerializableUser, SerializableUserMessage, tcp_protocol
 from localchat.server.logicImpl import TcpServerLogic
 
 
@@ -22,8 +22,8 @@ def _find_free_port() -> int | None:
 
 class TestTcpChatErrors(TestCase):
     @staticmethod
-    def _decode_error(payload: bytes) -> str:
-        return SerializableString.deserialize(BytesIO(payload[1:]), 4096).value
+    def _decode_error(payload: bytes) -> tuple[str, str]:
+        return tcp_protocol.decode_server_error(BytesIO(payload[1:]))
 
     def _connect_client(self, port: int) -> socket:
         client = socket(AF_INET, SOCK_STREAM)
@@ -50,7 +50,7 @@ class TestTcpChatErrors(TestCase):
             tcp_protocol.send_packet(client, tcp_protocol.encode_public_message("nope"))
             payload = tcp_protocol.recv_packet(client)
             self.assertEqual(payload[0], tcp_protocol.PT_S_ERROR)
-            self.assertEqual(self._decode_error(payload), "join first")
+            self.assertEqual(self._decode_error(payload), (tcp_protocol.ERR_JOIN_FIRST, "join first"))
         finally:
             client.close()
             server.stop()
@@ -67,7 +67,10 @@ class TestTcpChatErrors(TestCase):
             tcp_protocol.send_packet(client, bytes([250]))
             payload = tcp_protocol.recv_packet(client)
             self.assertEqual(payload[0], tcp_protocol.PT_S_ERROR)
-            self.assertEqual(self._decode_error(payload), "unknown packet type")
+            self.assertEqual(
+                self._decode_error(payload),
+                (tcp_protocol.ERR_UNKNOWN_PACKET_TYPE, "unknown packet type"),
+            )
         finally:
             client.close()
             server.stop()
@@ -88,7 +91,10 @@ class TestTcpChatErrors(TestCase):
             tcp_protocol.send_packet(client, tcp_protocol.encode_join(user))
             payload = tcp_protocol.recv_packet(client)
             self.assertEqual(payload[0], tcp_protocol.PT_S_ERROR)
-            self.assertEqual(self._decode_error(payload), "already joined")
+            self.assertEqual(
+                self._decode_error(payload),
+                (tcp_protocol.ERR_ALREADY_JOINED, "already joined"),
+            )
         finally:
             client.close()
             server.stop()
@@ -108,7 +114,10 @@ class TestTcpChatErrors(TestCase):
 
             tcp_protocol.send_packet(client, tcp_protocol.encode_private_message(uuid4(), "secret"))
             err_payload = self._recv_until_type(client, tcp_protocol.PT_S_ERROR)
-            self.assertEqual(self._decode_error(err_payload), "unknown recipient")
+            self.assertEqual(
+                self._decode_error(err_payload),
+                (tcp_protocol.ERR_UNKNOWN_RECIPIENT, "unknown recipient"),
+            )
 
             tcp_protocol.send_packet(client, tcp_protocol.encode_public_message("still alive"))
             pub_payload = self._recv_until_type(client, tcp_protocol.PT_S_PUBLIC)
@@ -139,7 +148,10 @@ class TestTcpChatErrors(TestCase):
 
             tcp_protocol.send_packet(c2, tcp_protocol.encode_join(second_user))
             err_payload = self._recv_until_type(c2, tcp_protocol.PT_S_ERROR)
-            self.assertEqual(self._decode_error(err_payload), "user id already in use")
+            self.assertEqual(
+                self._decode_error(err_payload),
+                (tcp_protocol.ERR_USER_ID_IN_USE, "user id already in use"),
+            )
 
             tcp_protocol.send_packet(observer, tcp_protocol.encode_join(observer_user))
             _ = self._recv_until_type(observer, tcp_protocol.PT_S_USER_JOINED)
@@ -174,7 +186,10 @@ class TestTcpChatErrors(TestCase):
         try:
             tcp_protocol.send_packet(client, tcp_protocol.encode_join(user))
             err_payload = self._recv_until_type(client, tcp_protocol.PT_S_ERROR)
-            self.assertEqual(self._decode_error(err_payload), "server is locked")
+            self.assertEqual(
+                self._decode_error(err_payload),
+                (tcp_protocol.ERR_JOIN_REJECTED, "server is locked"),
+            )
 
             server.set_locked(False)
             tcp_protocol.send_packet(client, tcp_protocol.encode_join(user))
@@ -210,7 +225,10 @@ class TestTcpChatErrors(TestCase):
         try:
             tcp_protocol.send_packet(client, tcp_protocol.encode_join(user))
             err_payload = self._recv_until_type(client, tcp_protocol.PT_S_ERROR)
-            self.assertEqual(self._decode_error(err_payload), "join failed")
+            self.assertEqual(
+                self._decode_error(err_payload),
+                (tcp_protocol.ERR_JOIN_FAILED, "join failed"),
+            )
 
             tcp_protocol.send_packet(client, tcp_protocol.encode_join(user))
             joined_payload = self._recv_until_type(client, tcp_protocol.PT_S_USER_JOINED)

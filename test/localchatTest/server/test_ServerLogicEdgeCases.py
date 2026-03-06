@@ -145,3 +145,30 @@ class TestServerLogicEdgeCases(TestCase):
         member_ids = {u.get_id() for u in logic.list_members()}
         self.assertEqual(len(member_ids), 30)
         logic.stop()
+
+    def test_auto_role_assignment_keeps_single_host_under_concurrency(self):
+        logic = InMemoryLogic()
+        logic.start()
+
+        users = [self._mk_user(f"U{i}") for i in range(40)]
+
+        def worker(batch):
+            for u in batch:
+                logic._register_member_auto_role(u)
+
+        threads = [
+            Thread(target=worker, args=(users[0:10],)),
+            Thread(target=worker, args=(users[10:20],)),
+            Thread(target=worker, args=(users[20:30],)),
+            Thread(target=worker, args=(users[30:40],)),
+        ]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        members = logic.list_members()
+        host_count = sum(1 for member in members if logic.get_user_role(member.get_id()) == Role.HOST)
+        self.assertEqual(host_count, 1)
+        self.assertTrue(logic.get_host_user().get_id() in {u.get_id() for u in members})
+        logic.stop()

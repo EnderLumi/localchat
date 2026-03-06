@@ -126,16 +126,33 @@ class AbstractLogic(Logic):
 
     def _register_member(self, user: User, role: Role):
         with self._lock:
-            user_id = user.get_id()
-            if user_id in self._banned_user_ids:
-                raise PermissionError("user is banned")
-            if self._locked and role != Role.HOST:
-                raise PermissionError("server is locked")
-            self._members_by_id[user_id] = user
-            self._roles_by_id[user_id] = role
-            if role == Role.HOST:
-                self._host_user_id = user_id
+            self._register_member_locked(user, role)
         self._member_joined_handler.handle(Event(self._event_owner(), user))
+
+    def _register_member_auto_role(self, user: User) -> Role:
+        with self._lock:
+            requested_role = Role.HOST if self._host_user_id is None else Role.MEMBER
+            effective_role = self._register_member_locked(user, requested_role)
+        self._member_joined_handler.handle(Event(self._event_owner(), user))
+        return effective_role
+
+    def _register_member_locked(self, user: User, role: Role) -> Role:
+        user_id = user.get_id()
+        if user_id in self._banned_user_ids:
+            raise PermissionError("user is banned")
+        if self._locked and role != Role.HOST:
+            raise PermissionError("server is locked")
+
+        # Keep host unique even if callers race with HOST intent.
+        effective_role = role
+        if role == Role.HOST and self._host_user_id is not None and self._host_user_id != user_id:
+            effective_role = Role.MEMBER
+
+        self._members_by_id[user_id] = user
+        self._roles_by_id[user_id] = effective_role
+        if effective_role == Role.HOST:
+            self._host_user_id = user_id
+        return effective_role
 
     def register_member(self, user: User, role: Role = Role.MEMBER):
         self._register_member(user, role)

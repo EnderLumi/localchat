@@ -9,7 +9,7 @@ from localchat.config.defaults import DEFAULT_HOST, DEFAULT_PORT
 from localchat.net.discovery import DiscoveredServer, UdpBroadcastDiscoveryResponder
 from localchat.net import tcp_protocol
 from localchat.server.logicImpl.AbstractLogic import AbstractLogic
-from localchat.util import Role, User, UserMessage
+from localchat.util import User, UserMessage
 from localchat.util.event import Event, EventListener
 
 
@@ -111,7 +111,6 @@ class TcpServerLogic(AbstractLogic):
                         continue
                     serial_user = tcp_protocol.decode_join(body)
                     user = serial_user
-                    role = Role.HOST if len(self.list_members()) == 0 else Role.MEMBER
                     session_user_id = user.get_id()
                     with self._sessions_lock:
                         if session_user_id in self._sessions_by_user_id:
@@ -122,13 +121,14 @@ class TcpServerLogic(AbstractLogic):
                         self._sessions_by_user_id[session_user_id] = session
                     session.user_id = session_user_id
                     try:
-                        self.register_member(user, role)
+                        self._register_member_auto_role(user)
+                    except PermissionError as e:
+                        reason = str(e) if len(str(e)) > 0 else "join rejected"
+                        self._reject_join(session, session_user_id, reason)
+                        continue
                     except Exception:
-                        with self._sessions_lock:
-                            self._sessions_by_user_id.pop(session_user_id, None)
-                            self._sessions_without_user.append(session)
-                        session.user_id = None
-                        raise
+                        self._reject_join(session, session_user_id, "join failed")
+                        continue
                 elif packet_type == tcp_protocol.PT_C_PUBLIC:
                     if session.user_id is None:
                         self._send_to_session(session, tcp_protocol.encode_server_error("join first"))
@@ -188,6 +188,18 @@ class TcpServerLogic(AbstractLogic):
                 self._unregister_member(user_id)
             except Exception:
                 pass
+
+    def _reject_join(self, session: _Session, session_user_id: UUID, reason: str):
+        with self._sessions_lock:
+            self._sessions_by_user_id.pop(session_user_id, None)
+            if session not in self._sessions_without_user:
+                self._sessions_without_user.append(session)
+        session.user_id = None
+        try:
+            self._send_to_session(session, tcp_protocol.encode_server_error(reason))
+        except IOError:
+            # Connection handling stays in the main loop / finally cleanup.
+            pass
 
     def _disconnect_member_impl(self, user_id: UUID, reason: str):
         with self._sessions_lock:

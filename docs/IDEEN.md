@@ -22,15 +22,15 @@
 - `/kick [name]`: Nutzer entfernen (Host-only)
 - `/ban [name]`: Nutzer vom Server bannen (Host-only)
 - `/whoami`: eigene Infos anzeigen
-- `/game <gamename> <opponent>`: Minigame anfragen
-- `/gameaccept <challenger>`: Minigame annehmen
+- `/game [gamename] [opponent]`: Minigame anfragen
+- `/gameaccept [challenger]`: Minigame annehmen
 - `/vote <text> [option1, option2, ...]`: eine Abstimmung starten.
 
 ## UI/UX Ideen
 - Autocomplete für Namen/Befehle (`prompt_toolkit` optional)
 - Bessere CLI-Feedbacks und Recovery-Hinweise
 - Klarer Modus-Status: "nicht verbunden", "verbunden", "host"
-- Farbkonzept für Rollen (Host, Servermeldungen, private Nachrichten)
+- Farben für Usernames und auch andere farbe für private messages
 
 ## Netzwerk / Protokoll
 - Join-Handshake bereits implementiert (ACK/NACK) -> weiter ausbauen:
@@ -48,6 +48,7 @@
 - Lokale User-Settings (Name, Farbe, zuletzt genutzte Server)
 - Chat-Export als stabiles Format
 - optional: Verlauf pro Server
+- Settings-UI ausbauen (Theme/Color-Mode, Export-Pfad, Suggestions ein/aus)
 
 ## Moderation / Server-Features
 - Ban-Liste verwalten (anzeigen, unban per Command)

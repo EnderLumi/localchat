@@ -15,6 +15,15 @@ Diese Datei beschreibt bewusst stabile Architekturprinzipien statt kurzfristiger
 - Darf von allen Schichten gelesen werden, enthält aber selbst keine Laufzeitlogik.
 - Keine Seiteneffekte (kein Netzwerk, kein Dateisystemzugriff in `config`-Modulen).
 
+### `settings`
+- Persistente User-Präferenzen (laufzeitnahe Konfiguration), getrennt von statischen Defaults.
+- `config` liefert nur Fallback-Werte; `settings` enthält nutzerspezifische Overrides.
+- Enthält:
+    - Modell (`AppSettings`)
+    - Persistenz (`SettingsStore`, aktuell JSON-Datei)
+- Darf Dateisystem-I/O machen (laden/speichern), aber keine Netzwerklogik.
+
+
 ### `util`
 - Enthält domänennahe Basistypen und eventbasierte Hilfsklassen.
 - Keine UI- oder transportspezifische Logik.
@@ -45,6 +54,7 @@ Diese Datei beschreibt bewusst stabile Architekturprinzipien statt kurzfristiger
 ### UI
 - Nur Benutzerinteraktion und Darstellung.
 - Keine direkte Protokoll- oder Socketlogik.
+- Darf Settings lesen/schreiben, um User-Präferenzen anzuwenden.
 
 ## 4. Verbindungs- und Join-Regeln
 - Join wird als expliziter Handshake modelliert (Anfrage + Annahme/Ablehnung).

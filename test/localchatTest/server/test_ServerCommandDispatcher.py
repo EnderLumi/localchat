@@ -87,3 +87,24 @@ class TestServerCommandDispatcher(TestCase):
         self.assertEqual(logic.get_user_role(host.get_id()), Role.MEMBER)
         logic.stop()
 
+    def test_list_and_serverinfo_return_metadata(self):
+        logic = InMemoryLogic()
+        logic.start()
+        private_events = _Collector()
+        logic.on_private_message().add_listener(private_events)
+
+        host = self._mk_user("Host")
+        member = self._mk_user("Member")
+        logic.register_member(host, Role.HOST)
+        logic.register_member(member, Role.MEMBER)
+
+        dispatcher = ServerCommandDispatcher(logic)
+        self.assertTrue(dispatcher.try_execute(host.get_id(), "/list"))
+        self.assertTrue(dispatcher.try_execute(host.get_id(), "/serverinfo"))
+        self.assertTrue(dispatcher.try_execute(member.get_id(), "/whoami"))
+
+        payloads = [m.message().lower() for m in private_events.items]
+        self.assertTrue(any("members:" in p and "host" in p and "member" in p for p in payloads))
+        self.assertTrue(any("server '" in p and "members=" in p for p in payloads))
+        self.assertTrue(any("you are" in p and "role=member" in p for p in payloads))
+        logic.stop()

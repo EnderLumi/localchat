@@ -26,6 +26,8 @@ class ServerCommandDispatcher:
         self._commands: dict[str, _CommandSpec] = {
             "help": _CommandSpec("help", False, "/help"),
             "whoami": _CommandSpec("whoami", False, "/whoami"),
+            "list": _CommandSpec("list", False, "/list"),
+            "serverinfo": _CommandSpec("serverinfo", False, "/serverinfo"),
             "kick": _CommandSpec("kick", True, "/kick <user-id-prefix> [reason]"),
             "newhost": _CommandSpec("newhost", True, "/newhost <user-id-prefix>"),
         }
@@ -61,6 +63,12 @@ class ServerCommandDispatcher:
         if raw_name == "whoami":
             self._handle_whoami(actor_id)
             return True
+        if raw_name == "list":
+            self._handle_list(actor_id)
+            return True
+        if raw_name == "serverinfo":
+            self._handle_serverinfo(actor_id)
+            return True
         if raw_name == "kick":
             self._handle_kick(actor_id, args)
             return True
@@ -73,7 +81,7 @@ class ServerCommandDispatcher:
 
     def _handle_help(self, actor_id: UUID):
         role = self._logic.get_user_role(actor_id)
-        base = ["/help", "/whoami"]
+        base = ["/help", "/whoami", "/list", "/serverinfo"]
         host_only = ["/kick <user-id-prefix> [reason]", "/newhost <user-id-prefix>"]
         if role == Role.HOST:
             body = "available commands: " + ", ".join(base + host_only)
@@ -84,7 +92,40 @@ class ServerCommandDispatcher:
     def _handle_whoami(self, actor_id: UUID):
         user = self._find_member(actor_id)
         role = self._logic.get_user_role(actor_id)
-        self._reply(actor_id, f"you are '{user.get_name()}' ({actor_id}) with role '{role.value}'")
+        info = self._logic.get_server_info()
+        host = self._logic.get_host_user()
+        self._reply(
+            actor_id,
+            "you are "
+            f"'{user.get_name()}' (id={user.get_id()}, role={role.value}) "
+            f"on server '{info.get_name()}' ({info.get_ip_address()}:{info.get_port()}) "
+            f"host='{host.get_name()}'",
+        )
+
+    def _handle_list(self, actor_id: UUID):
+        members = self._logic.list_members()
+        if len(members) == 0:
+            self._reply(actor_id, "no connected members")
+            return
+        lines: list[str] = []
+        for member in members:
+            try:
+                role = self._logic.get_user_role(member.get_id()).value
+            except KeyError:
+                role = "unknown"
+            lines.append(f"{member.get_name()} [id={member.get_id()} role={role}]")
+        self._reply(actor_id, "members: " + "; ".join(lines))
+
+    def _handle_serverinfo(self, actor_id: UUID):
+        info = self._logic.get_server_info()
+        host = self._logic.get_host_user()
+        members = self._logic.list_members()
+        self._reply(
+            actor_id,
+            f"server '{info.get_name()}' "
+            f"(id={info.get_id()}, endpoint={info.get_ip_address()}:{info.get_port()}), "
+            f"host='{host.get_name()}', members={len(members)}",
+        )
 
     def _handle_kick(self, actor_id: UUID, args: list[str]):
         if len(args) < 1:
@@ -161,4 +202,3 @@ class ServerCommandDispatcher:
 
     def _reply(self, recipient_id: UUID, message: str):
         self._logic.send_system_private_message(recipient_id, message)
-

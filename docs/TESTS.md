@@ -5,6 +5,7 @@
   - Serialisierung (`Serializable*`)
   - Protokoll-Codec (`tcp_protocol`)
   - Parsing (`join_target`)
+  - Settings-Modell/Store (`localchat/settings/*`)
   - UI-Logik in isolierten Dummies
 - Integrationstests:
   - TCP-Client/Server-Flows
@@ -50,6 +51,7 @@ Das ist erwartetes Verhalten in restriktiven Umgebungen.
 - Structured Error Codes `(code, message)`
 - Dynamic-Port-Reporting bei `port=0`
 - Port-Policy im CLI (privileged block, registered warning)
+- Settings-Laden/Speichern und Fallback-Verhalten
 
 ## 7. Empfehlung für CI
 - Mindestens:

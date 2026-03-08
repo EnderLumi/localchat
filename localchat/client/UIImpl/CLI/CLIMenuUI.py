@@ -11,6 +11,7 @@ from localchat.client.UIImpl.CLI.CLISettingsUI import CLISettingsUI
 from localchat.client.parsing.join_target import parse_join_target
 from localchat.config.defaults import DEFAULT_HOST, DEFAULT_PORT
 from localchat.server.logicImpl import TcpServerLogic
+from localchat.settings import AppSettings, SettingsStore
 from localchat.util import Chat, ChatInformation, User
 
 
@@ -76,16 +77,25 @@ class CLIMenuUI(AbstractUI):
         input_reader: Callable[[str], str] = input,
         output_writer: Callable[[str], None] = print,
         server_factory: Callable[[str, int], _ServerControl] | None = None,
+        settings: AppSettings | None = None,
+        settings_store: SettingsStore | None = None,
     ):
         super().__init__()
         self._input_reader = input_reader
         self._output_writer = output_writer
         self._server_factory = server_factory if server_factory is not None else TcpServerLogic
+        self._settings = settings if settings is not None else AppSettings.default()
+        self._settings_store = settings_store
         self._active = True
         self._known_servers: list[Chat] = []
         self._managed_servers: list[_ServerControl] = []
         appearance_id = uuid4()
-        self._appearance = _MutableUser(appearance_id, f"user-{appearance_id.hex[:8]}")
+        username = self._settings.username.strip()
+        if len(username) == 0:
+            username = f"user-{appearance_id.hex[:8]}"
+            self._settings.username = username
+            self._save_settings()
+        self._appearance = _MutableUser(appearance_id, username)
         self._settings_ui = CLISettingsUI(input_reader, output_writer)
 
     def start_impl(self):
@@ -112,7 +122,9 @@ class CLIMenuUI(AbstractUI):
                 self._direct_connect()
                 continue
             if command == "4":
-                self._settings_ui.run(self._appearance)
+                self._settings_ui.run(self._appearance, self._settings)
+                self._settings.username = self._appearance.get_name()
+                self._save_settings()
                 continue
             if command in {"0", "exit", "quit"}:
                 self.logic.shutdown()
@@ -203,10 +215,11 @@ class CLIMenuUI(AbstractUI):
             return
         host = host_input.strip() or DEFAULT_HOST
 
-        port_input = self._read_line(f"Port (Enter = {DEFAULT_PORT}): ")
+        default_port = self._settings.default_host_server_port
+        port_input = self._read_line(f"Port (Enter = {default_port}): ")
         if port_input is None:
             return
-        raw_port = port_input.strip() or str(DEFAULT_PORT)
+        raw_port = port_input.strip() or str(default_port)
         try:
             port = int(raw_port)
         except ValueError:
@@ -289,6 +302,7 @@ class CLIMenuUI(AbstractUI):
         chat_ui = CLIChatUI(
             chat=chat,
             appearance=self._appearance,
+            settings=self._settings,
             input_reader=self._input_reader,
             output_writer=self._output_writer,
         )
@@ -309,3 +323,11 @@ class CLIMenuUI(AbstractUI):
         except (EOFError, KeyboardInterrupt):
             self._output_writer("")
             return None
+
+    def _save_settings(self):
+        if self._settings_store is None:
+            return
+        try:
+            self._settings_store.save(self._settings)
+        except OSError:
+            pass

@@ -8,6 +8,7 @@ from localchat.client import UI
 from localchat.client.UIImpl.CLI import CLIChatUI, CLIMenuUI, CLISettingsUI
 from localchat.config.defaults import DEFAULT_HOST, DEFAULT_PORT
 from localchat.client.logic import Logic
+from localchat.settings import AppSettings
 from localchat.util import BinaryIOBase, Chat, ChatInformation, User, UserMessage
 from localchat.util.event import Event, EventHandler
 
@@ -335,6 +336,28 @@ class TestCLIUI(TestCase):
         self.assertEqual(recipient.get_id(), chat.get_server_user().get_id())
         self.assertEqual(message, "/kick Bob")
 
+    def test_cli_chat_displays_host_change_metadata(self):
+        output = _Output()
+        chat = _DummyChat("demo")
+        appearance = _DummyUser(uuid4(), "tester")
+
+        class _ReaderWithHostEvent:
+            def __init__(self):
+                self._calls = 0
+
+            def __call__(self, _prompt: str = "") -> str:
+                self._calls += 1
+                if self._calls == 1:
+                    promoted = _DummyUser(uuid4(), "Promoted")
+                    chat.on_user_became_host().handle(Event(chat.get_chat_info().get_id(), promoted))
+                    return "/leave"
+                raise EOFError()
+
+        ui = CLIChatUI(chat, appearance, input_reader=_ReaderWithHostEvent(), output_writer=output)
+        ui.run()
+
+        self.assertTrue(any(item.startswith("[host] Promoted") for item in output.items))
+
     def test_cli_settings_can_update_name_and_id(self):
         output = _Output()
         target_id = UUID("12345678-1234-5678-1234-567812345678")
@@ -347,6 +370,18 @@ class TestCLIUI(TestCase):
         self.assertEqual(appearance.get_name(), "Neo")
         self.assertEqual(appearance.get_id(), target_id)
         self.assertTrue(any("Invalid UUID." in item for item in output.items))
+
+    def test_cli_settings_can_update_name_color_with_color_name_and_hex(self):
+        output = _Output()
+        reader = _Reader(["3", "blue", "3", "#a1b2c3", "3", "not-a-color", "0"])
+        appearance = _DummyUser(uuid4(), "old")
+        settings = AppSettings.default()
+        ui = CLISettingsUI(input_reader=reader, output_writer=output)
+
+        ui.run(appearance, settings)
+
+        self.assertEqual(settings.name_color, "#A1B2C3")
+        self.assertTrue(any("Invalid color:" in item for item in output.items))
 
     def test_cli_menu_can_start_new_server_and_shutdown_stops_it(self):
         output = _Output()

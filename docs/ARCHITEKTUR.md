@@ -1,104 +1,86 @@
-# Localchat Architektur (Ist-Stand)
+# Localchat Architektur (Leitlinien)
 
-## 1. Verzeichnisstruktur
-- `localchat/__main__.py`: Programmeinstieg (`localchat start`), startet `UI` + `TcpClientLogic`.
-- `localchat/client/UI*`: UI-Interfaces und Implementierungen (z.B.: `CLI`, `simple`).
-- `localchat/client/logic*`: Client-Logik-Interfaces und Implementierungen (`TcpClientLogic`, `TcpChat`, `TestLogic`).
-- `localchat/server/logic*`: Server-Logik-Interfaces und Implementierungen (`InMemoryLogic`, `TcpServerLogic`).
-- `localchat/net/*`: TCP-Protokoll, Serialisierung, Discovery (UDP).
-- `localchat/util/*`: Domain-Basisklassen (`User`, `Chat`, `UserMessage`, `ChatInformation`) und Event-System.
-- `test/localchatTest/*`: Unit-, Integrations- und E2E-Tests.
+Diese Datei beschreibt bewusst stabile Architekturprinzipien statt kurzfristiger Implementierungsdetails.
 
-## 2. Laufzeitmodell
-### Client
-- Main-Thread: UI (`CLIMenuUI` oder `SimpleUI`).
-- Logic-Thread: über `AbstractLogic.start()`.
-- Pro Chat ein eigener TCP-Receive-Thread in `TcpChat`.
+## 1. Architekturprinzipien
+- Trenne strikt zwischen UI, Client-Logik, Server-Logik und Netzwerk/Protokoll.
+- Halte Interfaces stabil und Implementierungen austauschbar.
+- Behandle das Netzwerk als unzuverlässig: jeder Pfad braucht klare Fehler- und Timeout-Strategien.
+- Transportdetails dürfen nicht in UI oder Domänenmodelle auslaufen.
+- Änderungen am Protokoll sind immer kompatibel geplant oder klar versioniert.
 
-### Server
-- Main-Thread: `TcpServerLogic.start()`.
-- Accept-Thread: nimmt TCP-Clients an.
-- Pro Client ein eigener Session-Thread (`_client_loop`).
-- Discovery-Responder-Thread (UDP).
+## 2. Schichtenmodell
+### `config`
+- Zentrale, statische Konfiguration (z. B. Defaults, Limits, Farben, Feature-Flags falls vorhanden).
+- Darf von allen Schichten gelesen werden, enthält aber selbst keine Laufzeitlogik.
+- Keine Seiteneffekte (kein Netzwerk, kein Dateisystemzugriff in `config`-Modulen).
 
-## 3. Kernkomponenten
-### Client
-- `TcpClientLogic`: erstellt/sucht Chats, hält bekannte Chats, bietet `connect_direct`.
-- `TcpChat`: Join/Leave, Public/Private Messages, Connection-Events.
-- `CLIMenuUI`: Menüführung, Serverstart, Direktverbindung, Settings.
+### `util`
+- Enthält domänennahe Basistypen und eventbasierte Hilfsklassen.
+- Keine UI- oder transportspezifische Logik.
 
-### Server
-- `AbstractLogic` (serverseitig): State-Verwaltung (Members, Rollen, Lock/Ban, Chatlog).
-- `TcpServerLogic`: TCP-Protokoll, Session-Management, Broadcast/Private Routing.
-- `InMemoryLogic`: transportfreie Referenzimplementierung.
+### `net`
+- Zuständig für Protokoll, Kodierung/Validierung, Discovery und Transporthilfen.
+- Keine Produktlogik (z. B. Rechte, Hostwechsel, Moderation).
 
-### Netzwerk
-- `tcp_protocol.py`: Pakettypen + Encoder/Decoder.
-- Serialisierung: `Serializable*`-Klassen.
-- Discovery: UDP Broadcast Request/Response.
+### `client`
+- UI und clientseitige Anwendungsschicht.
+- Darf Netzwerk nur über Client-Logik-Abstraktionen nutzen.
 
-## 4. Join-Handshake (ACK/NACK)
-Der Join ist explizit synchronisiert:
-1. Client sendet `PT_C_JOIN`.
-2. Server registriert Member-State.
-3. Erfolg: `PT_S_JOIN_ACK`.
-4. Fehler: `PT_S_JOIN_NACK` mit `code + message`.
-5. Client setzt `joined=True` erst nach ACK.
+### `server`
+- Autoritative Zustandsverwaltung des Chats (Members, Rollen, Regeln).
+- Verantwortlich für Konsistenz und Durchsetzung von Berechtigungen.
 
-Das verhindert "halb-joined" Zustände.
+## 3. Verantwortlichkeiten
+### Client-Logik
+- Verbindungen initiieren und verwalten.
+- UI-freundliche Commands/Aktionen anbieten.
+- Serverereignisse in UI-Events übersetzen.
 
-## 5. TCP-Pakettypen (aktuell)
-### Client -> Server
-- `PT_C_JOIN = 1`
-- `PT_C_PUBLIC = 2`
-- `PT_C_PRIVATE = 3`
-- `PT_C_LEAVE = 4`
+### Server-Logik
+- Join/Leave und Rollenwechsel atomar durchführen.
+- Public/Private Nachrichten korrekt routen.
+- Fehler immer strukturiert und maschinenlesbar zurückgeben.
 
-### Server -> Client
-- `PT_S_USER_JOINED = 100`
-- `PT_S_USER_LEFT = 101`
-- `PT_S_USER_BECAME_HOST = 102`
-- `PT_S_JOIN_ACK = 105`
-- `PT_S_JOIN_NACK = 106`
-- `PT_S_PUBLIC = 110`
-- `PT_S_PRIVATE = 111`
-- `PT_S_ERROR = 120`
+### UI
+- Nur Benutzerinteraktion und Darstellung.
+- Keine direkte Protokoll- oder Socketlogik.
 
-## 6. Structured Error Codes
-Fehler werden maschinenlesbar als `(code, message)` übertragen.
-Wichtige Codes:
-- `join_first`
-- `already_joined`
-- `user_id_in_use`
-- `unknown_recipient`
-- `unknown_packet_type`
-- `join_rejected`
-- `join_failed`
-- `disconnected`
-- `generic`
+## 4. Verbindungs- und Join-Regeln
+- Join wird als expliziter Handshake modelliert (Anfrage + Annahme/Ablehnung).
+- Ein Client gilt erst als "joined", wenn der Server den Join bestätigt.
+- Join-Ablehnungen müssen den Session-Zustand sauber zurückrollen.
+- Mitgliedschafts-Events (z. B. "User joined") sind fachliche Broadcasts, keine Handshake-Antwort.
 
-## 7. Discovery (UDP)
-- Scanner sendet Broadcast Request mit `nonce` + `reply_port`.
-- Responder antwortet mit Server-Snapshot (`server_id`, `name`, `host`, `port`, `requires_password`).
-- Bei `port=0` wird der tatsächlich gebundene Socket-Port verwendet.
+## 5. Protokollrichtlinien
+- Pakettypen sind zentral definiert und dokumentiert.
+- Fehlerantworten enthalten mindestens `code` und `message`.
+- Neue Pakettypen nur einführen, wenn semantisch nötig.
+- Bei Änderungen:
+  1. Codec anpassen
+  2. Serverpfad anpassen
+  3. Clientpfad anpassen
+  4. Tests (Unit + Integration) ergänzen
 
-## 8. Port-Verhalten im CLI
-Beim Serverstart über `CLIMenuUI`:
-- `1-1023`: blockiert.
-- `1024-49151`: erlaubt, aber Warnung.
-- `49152-65535`: empfohlen.
+## 6. Threading- und Zustandsregeln
+- Gemeinsamer Zustand ist immer explizit synchronisiert.
+- Rollen- und Membership-Entscheidungen erfolgen atomar.
+- Nebenläufigkeit wird mit Tests abgesichert (insb. Join/Rollenwechsel).
+- Keine stillen Zustandsübergänge: immer klar definierte Zustandsänderungen.
 
-## 9. Event-System
-- `EventHandler[T]` verwaltet Listener thread-safe.
-- Wichtige Chat-Events:
-  - User joined/left/became host
-  - Public/private message
-  - Connection problem/failure
+## 7. Discovery- und Port-Regeln
+- Discovery meldet den tatsächlich erreichbaren Serverendpunkt.
+- Dynamische Ports müssen als effektive Runtime-Ports weitergegeben werden.
+- Portwahlregeln in der UI dienen der Sicherheit/Usability, nicht der Kernarchitektur.
 
-## 10. Wichtig für Änderungen
-- Protokolländerungen immer in vier Schritten:
-  1. `localchat/net/tcp_protocol.py`
-  2. `localchat/server/logicImpl/TcpServerLogic.py`
-  3. `localchat/client/logicImpl/TcpChat.py`
-  4. passende Tests in `test/localchatTest/net/*` + ggf. E2E
-- Architekturdatei bei relevanten Änderungen direkt mitpflegen.
+## 8. Erweiterungsregeln
+- Neue Features zuerst als Use-Case + Schnittstellenänderung beschreiben.
+- Danach erst Implementierung in allen betroffenen Schichten.
+- Cross-Cutting Features (z. B. Passwort, Datei-Transfer) in kleinen, testbaren Schritten einführen.
+
+## 9. Dokumentationsregeln
+- Diese Datei bleibt stabil und beschreibt "wie wir bauen".
+- Detailstände (konkrete Paket-IDs, konkrete Flows, aktuelle Implementierungsvarianten) gehören in spezialisierte Doku:
+  - `docs/IDEEN.md` für Backlog
+  - `docs/TESTS.md` für Teststrategie
+  - `docs/PROTOKOLL.md` für konkrete Wire-Details

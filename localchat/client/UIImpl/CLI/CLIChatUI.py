@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Callable, TypeVar
 
+from localchat.client.commands import ChatCommandRegistry
 from localchat.util import Chat, User, UserMessage
 from localchat.util.event import Event, EventListener
 
@@ -30,6 +31,7 @@ class CLIChatUI:
         self._input_reader = input_reader
         self._output_writer = output_writer
         self._active = True
+        self._command_registry = ChatCommandRegistry(chat=self._chat, output_writer=self._output_writer)
 
         self._message_listener = _ValueListener(self._on_public_message)
         self._private_message_listener = _ValueListener(self._on_private_message)
@@ -57,21 +59,16 @@ class CLIChatUI:
                 command = self._read_line("chat> ")
                 if command is None:
                     break
-                command = command.strip()
-                if len(command) == 0:
-                    continue
-                if command in {"/leave", "leave", "/back"}:
-                    break
-                if command in {"/help", "help"}:
-                    self._show_help()
-                    continue
-
-                message = command
-                if command.startswith("/say "):
-                    message = command[5:].strip()
-                if len(message) == 0:
-                    continue
                 try:
+                    command_result = self._command_registry.execute(command)
+                    if command_result.handled:
+                        if command_result.should_leave:
+                            break
+                        continue
+
+                    message = command.strip()
+                    if len(message) == 0:
+                        continue
                     self._chat.post_message(message)
                 except (IOError, RuntimeError) as e:
                     self._output_writer(f"I/O error while sending message: {e}")
@@ -82,12 +79,6 @@ class CLIChatUI:
                 except IOError as e:
                     self._output_writer(f"I/O error while leaving chat: {e}")
             self._deactivate_listeners()
-
-    def _show_help(self):
-        self._output_writer("Available chat commands:")
-        self._output_writer("/help   -> show help")
-        self._output_writer("/leave  -> return to main menu")
-        self._output_writer("/say <text> or plain <text> to send")
 
     def _activate_listeners(self):
         self._chat.on_user_posted_message().add_listener(self._message_listener)

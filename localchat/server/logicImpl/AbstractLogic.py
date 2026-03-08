@@ -118,6 +118,12 @@ class AbstractLogic(Logic):
     def _event_owner(self) -> UUID:
         return self._server_info.get_id()
 
+    def _get_server_user(self) -> User:
+        return self._server_user
+
+    def _get_server_user_id(self) -> UUID:
+        return self._server_user.get_id()
+
     def _emit_error(self, error: IOError):
         self._error_handler.handle(Event(self._event_owner(), error))
 

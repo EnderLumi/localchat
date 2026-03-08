@@ -8,6 +8,7 @@ from uuid import UUID
 from localchat.config.defaults import DEFAULT_HOST, DEFAULT_PORT
 from localchat.net.discovery import DiscoveredServer, UdpBroadcastDiscoveryResponder
 from localchat.net import tcp_protocol
+from localchat.server.commands import ServerCommandDispatcher
 from localchat.server.logicImpl.AbstractLogic import AbstractLogic
 from localchat.util import User, UserMessage
 from localchat.util.event import Event, EventListener
@@ -47,6 +48,7 @@ class TcpServerLogic(AbstractLogic):
             snapshot_provider=self._discovery_snapshot,
             bind_host=self._host,
         )
+        self._command_dispatcher = ServerCommandDispatcher(self)
 
         self.on_member_joined().add_listener(
             _SendUserEventToClients(self, tcp_protocol.encode_server_user_joined)
@@ -192,6 +194,17 @@ class TcpServerLogic(AbstractLogic):
                         )
                         continue
                     user_message = self._make_user_message(sender, message)
+                    if recipient.value == self._get_server_user_id():
+                        handled = self._command_dispatcher.try_execute(session.user_id, message)
+                        if not handled:
+                            self._send_to_session(
+                                session,
+                                tcp_protocol.encode_server_error(
+                                    tcp_protocol.ERR_UNKNOWN_COMMAND,
+                                    "server command expected, prefix with '/'",
+                                ),
+                            )
+                        continue
                     try:
                         self._send_private_impl(recipient.value, user_message)
                     except KeyError:

@@ -119,6 +119,7 @@ class _DummyChat(Chat):
         self.join_calls = 0
         self.leave_calls = 0
         self.posted_messages: list[str] = []
+        self.private_messages: list[tuple[User, str]] = []
 
         self._on_user_joined = EventHandler()
         self._on_user_left = EventHandler()
@@ -154,7 +155,7 @@ class _DummyChat(Chat):
         )
 
     def send_private_message(self, recipient: User, message: str):
-        return
+        self.private_messages.append((recipient, message))
 
     def download_chat(self, output_stream: BinaryIOBase):
         raise NotImplementedError()
@@ -316,6 +317,23 @@ class TestCLIUI(TestCase):
         self.assertEqual(chat.join_calls, 1)
         self.assertEqual(chat.leave_calls, 1)
         self.assertEqual(chat.posted_messages, ["hello world"])
+
+    def test_cli_chat_forwards_unknown_slash_command_to_server(self):
+        output = _Output()
+        reader = _Reader(["/kick Bob", "/leave"])
+        chat = _DummyChat("demo")
+        appearance = _DummyUser(uuid4(), "tester")
+        ui = CLIChatUI(chat, appearance, input_reader=reader, output_writer=output)
+
+        ui.run()
+
+        self.assertEqual(chat.join_calls, 1)
+        self.assertEqual(chat.leave_calls, 1)
+        self.assertEqual(chat.posted_messages, [])
+        self.assertEqual(len(chat.private_messages), 1)
+        recipient, message = chat.private_messages[0]
+        self.assertEqual(recipient.get_id(), chat.get_server_user().get_id())
+        self.assertEqual(message, "/kick Bob")
 
     def test_cli_settings_can_update_name_and_id(self):
         output = _Output()

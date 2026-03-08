@@ -10,7 +10,7 @@
 - `/myColor [blue/yellow/etc./HEX]`: Username-Farbe setzen
 - `/rename`: Name ändern (mit Cooldown-Regel)
 - `/info [name/servername]`: Metadaten anzeigen
-- `/test server`: lokaler Testserver
+- `/testserver`: Testserver auf den niemand von außerhalb joinen kann
 - `/send file [path/to/file]`: Datei senden
 - `/save chat [filename]`: Chatverlauf speichern
 - `/ping [name/server]`: Latenz messen
@@ -20,9 +20,11 @@
 - `/new servername`: Servername ändern (Host-only)
 - `/new Passwort`: Serverpasswort ändern (Host-only)
 - `/kick [name]`: Nutzer entfernen (Host-only)
+- `/ban [name]`: Nutzer vom Server bannen (Host-only)
 - `/whoami`: eigene Infos anzeigen
 - `/game <gamename> <opponent>`: Minigame anfragen
 - `/gameaccept <challenger>`: Minigame annehmen
+- `/vote <text> [option1, option2, ...]`: eine Abstimmung starten.
 
 ## UI/UX Ideen
 - Autocomplete für Namen/Befehle (`prompt_toolkit` optional)

@@ -1,4 +1,4 @@
-Localchat – Struktur
+Localchat – Struktur (veraltet)
 
 config
 Abhängigkeiten:

@@ -1,9 +1,10 @@
 import argparse
 import sys
 
-from localchat.client.UIImpl.simple import SimpleUI
+from localchat.client.UIImpl.CLI import CLIMenuUI
 from localchat.client.logicImpl import TcpClientLogic
 from localchat.client.logicImpl.testing import TestLogic
+from localchat.settings import SettingsStore
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -22,7 +23,9 @@ def _build_parser() -> argparse.ArgumentParser:
 
 
 def _wire_and_run(logic) -> int:
-    ui = SimpleUI()
+    settings_store = SettingsStore()
+    settings = settings_store.load()
+    ui = CLIMenuUI(settings=settings, settings_store=settings_store)
     logic.set_ui(ui)
     ui.set_logic(logic)
     logic.start()

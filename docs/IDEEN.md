@@ -65,9 +65,8 @@
 - `highestnumber`
 - `headortails`
 
-## Priorisierungsvorschlag
+## nächste Schritte
 1. Zentrales Command-System
-2. Passwort-Handshake
-3. Persistenz (User + zuletzt verbundene Server)
-4. `/list`, `/whoami`, `/uptime`, `/version`
-5. Datei-Transfer / Minigames
+2. `/list`, `/whoami`, `/uptime`, `/version`
+3. Passwort-Handshake
+4. Datei-Transfer / Minigames

@@ -53,6 +53,6 @@ class ChatCommandRegistry:
         self._output_writer("Available chat commands:")
         self._output_writer("/help   -> show help")
         self._output_writer("/leave  -> return to main menu")
-        self._output_writer("/say <text> -> send public message")
+        #self._output_writer("/say <text> -> send public message")
         self._output_writer("/<command> -> forwarded to server command dispatcher")
 

@@ -1,11 +1,9 @@
 # Localchat Architektur (Leitlinien)
 
-Diese Datei beschreibt bewusst stabile Architekturprinzipien statt kurzfristiger Implementierungsdetails.
-
 ## 1. Architekturprinzipien
-- Trenne strikt zwischen UI, Client-Logik, Server-Logik und Netzwerk/Protokoll.
-- Halte Interfaces stabil und Implementierungen austauschbar.
-- Behandle das Netzwerk als unzuverlässig: jeder Pfad braucht klare Fehler- und Timeout-Strategien.
+- Strikte Trennung zwischen UI, Client-Logik, Server-Logik und Netzwerk/Protokoll.
+- Interfaces stabil halten und Implementierungen immer austauschbar gestalten.
+- Netzwerk nicht als zuverlässig sehen -> Jeder Pfad braucht klare Fehlermeldungen und Timeout-strategien.
 - Transportdetails dürfen nicht in UI oder Domänenmodelle auslaufen.
 - Änderungen am Protokoll sind immer kompatibel geplant oder klar versioniert.
 
@@ -17,7 +15,7 @@ Diese Datei beschreibt bewusst stabile Architekturprinzipien statt kurzfristiger
 
 ### `settings`
 - Persistente User-Präferenzen (laufzeitnahe Konfiguration), getrennt von statischen Defaults.
-- `config` liefert nur Fallback-Werte; `settings` enthält nutzerspezifische Overrides.
+- `config.defaults.py` liefert nur Fallback-Werte; `settings` enthält nutzerspezifische Overrides.
 - Enthält:
     - Modell (`AppSettings`)
     - Persistenz (`SettingsStore`, aktuell JSON-Datei)

@@ -102,7 +102,7 @@ class TcpChat(AbstractChat):
         try:
             sock.connect((host, port))
             self._send_packet(sock, tcp_protocol.encode_join(appearance))
-            pending_packets = self._wait_for_join_ack(sock)
+            acknowledged_user, pending_packets = self._wait_for_join_ack(sock)
         except OSError as e:
             sock.close()
             raise IOError("failed to connect/join chat") from e
@@ -111,6 +111,7 @@ class TcpChat(AbstractChat):
             raise
 
         with self._lock:
+            self._update_local_appearance_after_join(appearance, acknowledged_user)
             self._socket = sock
             self._joined = True
             self._recv_stop.clear()
@@ -243,7 +244,7 @@ class TcpChat(AbstractChat):
         except OSError as e:
             raise IOError("failed to send packet") from e
 
-    def _wait_for_join_ack(self, sock: socket) -> list[tuple[int, object]]:
+    def _wait_for_join_ack(self, sock: socket) -> tuple[SerializableUser, list[tuple[int, object]]]:
         pending_packets: list[tuple[int, object]] = []
         try:
             sock.settimeout(self._JOIN_TIMEOUT_S)
@@ -251,7 +252,7 @@ class TcpChat(AbstractChat):
                 payload = tcp_protocol.recv_packet(sock)
                 packet_type, body = tcp_protocol.decode_client_packet(payload)
                 if packet_type == tcp_protocol.PT_S_JOIN_ACK:
-                    return pending_packets
+                    return tcp_protocol.decode_server_join_ack(body), pending_packets
                 if packet_type == tcp_protocol.PT_S_JOIN_NACK:
                     code, message = tcp_protocol.decode_server_join_nack(body)
                     raise IOError(f"join rejected [{code}]: {message}")
@@ -263,3 +264,8 @@ class TcpChat(AbstractChat):
             raise IOError("join timed out waiting for server acknowledgement") from e
         finally:
             sock.settimeout(None)
+
+    @staticmethod
+    def _update_local_appearance_after_join(local_user: User, acknowledged_user: SerializableUser):
+        if hasattr(local_user, "set_id"):
+            local_user.set_id(acknowledged_user.get_id())

@@ -60,9 +60,12 @@ class TestTcpProtocolCodec(TestCase):
         self.assertEqual(decoded_priv.sender().get_id(), sender.get_id())
 
     def test_join_ack_payload(self):
-        payload = tcp_protocol.encode_server_join_ack()
+        user = SerializableUser(uuid4(), "Alice")
+        payload = tcp_protocol.encode_server_join_ack(user)
         self.assertEqual(payload[0], tcp_protocol.PT_S_JOIN_ACK)
-        self.assertEqual(len(payload), 1)
+        decoded = tcp_protocol.decode_server_join_ack(BytesIO(payload[1:]))
+        self.assertEqual(decoded.get_id(), user.get_id())
+        self.assertEqual(decoded.get_name(), "Alice")
 
     def test_join_nack_payload_roundtrip(self):
         payload = tcp_protocol.encode_server_join_nack(

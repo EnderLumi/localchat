@@ -30,6 +30,12 @@ class SerializableUser(User,Serializable):
         serial_uuid.serialize(output_stream)
         serial_name.serialize(output_stream)
 
+    def set_id(self, user_id: UUID):
+        self._id = user_id
+
+    def set_name(self, name: str):
+        self._name = name
+
     @staticmethod
     def deserialize(input_stream: BinaryIOBase) -> 'SerializableUser':
         serial_uuid = SerializableUUID.deserialize(input_stream)

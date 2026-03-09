@@ -30,7 +30,10 @@ class TestTcpChatPath(TestCase):
     def _recv_until_type(self, client: socket, packet_type: int, timeout_s: float = 2.0) -> bytes:
         end = time() + timeout_s
         while time() < end:
-            payload = tcp_protocol.recv_packet(client)
+            try:
+                payload = tcp_protocol.recv_packet(client)
+            except TimeoutError:
+                continue
             if payload[0] == packet_type:
                 return payload
         raise TimeoutError(f"packet type {packet_type} not received")
@@ -52,20 +55,21 @@ class TestTcpChatPath(TestCase):
         tcp_protocol.send_packet(c1, tcp_protocol.encode_join(u1))
         tcp_protocol.send_packet(c2, tcp_protocol.encode_join(u2))
 
-        # Drain join announcements.
-        self._recv_until_type(c1, tcp_protocol.PT_S_USER_JOINED)
-        self._recv_until_type(c2, tcp_protocol.PT_S_USER_JOINED)
+        ack1 = self._recv_until_type(c1, tcp_protocol.PT_S_JOIN_ACK)
+        assigned_u1 = tcp_protocol.decode_server_join_ack(BytesIO(ack1[1:]))
+        ack2 = self._recv_until_type(c2, tcp_protocol.PT_S_JOIN_ACK)
+        assigned_u2 = tcp_protocol.decode_server_join_ack(BytesIO(ack2[1:]))
 
         tcp_protocol.send_packet(c1, tcp_protocol.encode_public_message("hello world"))
         public_payload = self._recv_until_type(c2, tcp_protocol.PT_S_PUBLIC)
         public_msg = SerializableUserMessage.deserialize(BytesIO(public_payload[1:]))
-        self.assertEqual(public_msg.sender().get_id(), u1.get_id())
+        self.assertEqual(public_msg.sender().get_id(), assigned_u1.get_id())
         self.assertEqual(public_msg.message(), "hello world")
 
-        tcp_protocol.send_packet(c1, tcp_protocol.encode_private_message(u2.get_id(), "secret"))
+        tcp_protocol.send_packet(c1, tcp_protocol.encode_private_message(assigned_u2.get_id(), "secret"))
         private_payload = self._recv_until_type(c2, tcp_protocol.PT_S_PRIVATE)
         private_msg = SerializableUserMessage.deserialize(BytesIO(private_payload[1:]))
-        self.assertEqual(private_msg.sender().get_id(), u1.get_id())
+        self.assertEqual(private_msg.sender().get_id(), assigned_u1.get_id())
         self.assertEqual(private_msg.message(), "secret")
 
         tcp_protocol.send_packet(c1, tcp_protocol.encode_leave())

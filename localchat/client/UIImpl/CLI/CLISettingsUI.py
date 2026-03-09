@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from typing import Callable, Protocol
-from uuid import UUID
 
 from localchat.settings import AppSettings
 from localchat.settings.validators import available_color_names, normalize_name_color
@@ -9,9 +8,7 @@ from localchat.settings.validators import available_color_names, normalize_name_
 
 class MutableAppearance(Protocol):
     def get_name(self) -> str: ...
-    def get_id(self) -> UUID: ...
     def set_name(self, user_name: str): ...
-    def set_id(self, user_id: UUID): ...
 
 
 class CLISettingsUI:
@@ -27,13 +24,11 @@ class CLISettingsUI:
         while True:
             self._output_writer("=== Settings ===")
             self._output_writer(f"Current name: {appearance.get_name()}")
-            self._output_writer(f"Current ID:   {appearance.get_id()}")
             if settings is not None:
                 self._output_writer(f"Name color:   {settings.name_color}")
             self._output_writer("1) Change name")
-            self._output_writer("2) Change ID")
             if settings is not None:
-                self._output_writer("3) Change name color")
+                self._output_writer("2) Change name color")
             self._output_writer("0) Back")
 
             choice = self._read_line("settings> ")
@@ -46,10 +41,7 @@ class CLISettingsUI:
             if choice == "1":
                 self._change_name(appearance)
                 continue
-            if choice == "2":
-                self._change_id(appearance)
-                continue
-            if choice == "3" and settings is not None:
+            if choice == "2" and settings is not None:
                 self._change_name_color(settings)
                 continue
 
@@ -65,19 +57,6 @@ class CLISettingsUI:
             return
         appearance.set_name(new_name)
         self._output_writer(f"Name updated: {new_name}")
-
-    def _change_id(self, appearance: MutableAppearance):
-        raw_id = self._read_line("New ID (UUID): ")
-        if raw_id is None:
-            return
-        raw_id = raw_id.strip()
-        try:
-            new_id = UUID(raw_id)
-        except ValueError:
-            self._output_writer("Invalid UUID.")
-            return
-        appearance.set_id(new_id)
-        self._output_writer(f"ID updated: {new_id}")
 
     def _change_name_color(self, settings: AppSettings):
         raw_color = self._read_line("New name color (config color name or #RRGGBB): ")

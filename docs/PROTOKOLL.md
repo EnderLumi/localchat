@@ -41,7 +41,7 @@ Diese Datei beschreibt die konkreten Wire-Details.
 - `PT_S_USER_JOINED` / `PT_S_USER_LEFT` / `PT_S_USER_BECAME_HOST`:
   - `SerializableUser`
 - `PT_S_JOIN_ACK`:
-  - kein Body
+  - `SerializableUser` (vom Server vergebene Session-Identität)
 - `PT_S_JOIN_NACK`:
   - `SerializableString(code)`
   - `SerializableString(message)`

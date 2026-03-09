@@ -99,8 +99,10 @@ def encode_server_public_message(user_message: UserMessage) -> bytes:
     return _build_payload(PT_S_PUBLIC, buffer.getvalue())
 
 
-def encode_server_join_ack() -> bytes:
-    return _build_payload(PT_S_JOIN_ACK)
+def encode_server_join_ack(user: User) -> bytes:
+    buffer = BytesIO()
+    SerializableUser.create_copy(user).serialize(buffer)
+    return _build_payload(PT_S_JOIN_ACK, buffer.getvalue())
 
 
 def encode_server_join_nack(code: str, message: str | None = None) -> bytes:
@@ -167,6 +169,10 @@ def decode_server_join_nack(body_stream: BytesIO) -> tuple[str, str]:
     code = SerializableString.deserialize(body_stream, MAX_MESSAGE_LENGTH).value
     message = SerializableString.deserialize(body_stream, MAX_MESSAGE_LENGTH).value
     return code, message
+
+
+def decode_server_join_ack(body_stream: BytesIO) -> SerializableUser:
+    return SerializableUser.deserialize(body_stream)
 
 
 def decode_client_packet(payload: bytes) -> tuple[int, BytesIO]:

@@ -3,9 +3,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from socket import AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR, socket
 from threading import Lock, Thread
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from localchat.config.defaults import DEFAULT_HOST, DEFAULT_PORT
+from localchat.net import SerializableUser
 from localchat.net.discovery import DiscoveredServer, UdpBroadcastDiscoveryResponder
 from localchat.net import tcp_protocol
 from localchat.server.commands import ServerCommandDispatcher
@@ -74,7 +75,11 @@ class TcpServerLogic(AbstractLogic):
             self._server_info.set_port(actual_port)
         self._accept_thread = Thread(target=self._accept_loop, name="localchat tcp accept loop", daemon=True)
         self._accept_thread.start()
-        self._discovery_responder.start()
+        try:
+            self._discovery_responder.start()
+        except IOError as e:
+            # Discovery is optional metadata transport; TCP chat should still run.
+            self._emit_error(e)
 
     def _on_stop_impl(self):
         self._discovery_responder.stop()
@@ -119,26 +124,17 @@ class TcpServerLogic(AbstractLogic):
                             ),
                         )
                         continue
-                    serial_user = tcp_protocol.decode_join(body)
-                    user = serial_user
+                    requested_user = tcp_protocol.decode_join(body)
+                    user = self._new_session_user(requested_user.get_name())
                     session_user_id = user.get_id()
                     with self._sessions_lock:
-                        if session_user_id in self._sessions_by_user_id:
-                            self._send_to_session(
-                                session,
-                                tcp_protocol.encode_server_error(
-                                    tcp_protocol.ERR_USER_ID_IN_USE,
-                                    "user id already in use",
-                                ),
-                            )
-                            continue
                         if session in self._sessions_without_user:
                             self._sessions_without_user.remove(session)
                         self._sessions_by_user_id[session_user_id] = session
                     session.user_id = session_user_id
                     try:
                         self._register_member_auto_role(user)
-                        self._send_to_session(session, tcp_protocol.encode_server_join_ack())
+                        self._send_to_session(session, tcp_protocol.encode_server_join_ack(user))
                     except PermissionError as e:
                         reason = str(e) if len(str(e)) > 0 else "join rejected"
                         self._reject_join(
@@ -327,3 +323,11 @@ class TcpServerLogic(AbstractLogic):
     def _send_to_session(session: _Session, payload: bytes):
         with session.send_lock:
             tcp_protocol.send_packet(session.sock, payload)
+
+    def _new_session_user(self, name: str) -> SerializableUser:
+        while True:
+            candidate_id = uuid4()
+            with self._sessions_lock:
+                if candidate_id in self._sessions_by_user_id:
+                    continue
+            return SerializableUser(candidate_id, name)

@@ -33,7 +33,10 @@ class TestTcpChatErrors(TestCase):
 
     def _recv_until_type(self, client: socket, packet_type: int, max_reads: int = 8) -> bytes:
         for _ in range(max_reads):
-            payload = tcp_protocol.recv_packet(client)
+            try:
+                payload = tcp_protocol.recv_packet(client)
+            except TimeoutError:
+                continue
             if payload[0] == packet_type:
                 return payload
         raise TimeoutError(f"packet type {packet_type} not received")
@@ -110,7 +113,8 @@ class TestTcpChatErrors(TestCase):
         user = SerializableUser(uuid4(), "Alice")
         try:
             tcp_protocol.send_packet(client, tcp_protocol.encode_join(user))
-            _ = self._recv_until_type(client, tcp_protocol.PT_S_USER_JOINED)
+            ack_payload = self._recv_until_type(client, tcp_protocol.PT_S_JOIN_ACK)
+            assigned_user = tcp_protocol.decode_server_join_ack(BytesIO(ack_payload[1:]))
 
             tcp_protocol.send_packet(client, tcp_protocol.encode_private_message(uuid4(), "secret"))
             err_payload = self._recv_until_type(client, tcp_protocol.PT_S_ERROR)
@@ -122,13 +126,13 @@ class TestTcpChatErrors(TestCase):
             tcp_protocol.send_packet(client, tcp_protocol.encode_public_message("still alive"))
             pub_payload = self._recv_until_type(client, tcp_protocol.PT_S_PUBLIC)
             public_msg = SerializableUserMessage.deserialize(BytesIO(pub_payload[1:]))
-            self.assertEqual(public_msg.sender().get_id(), user.get_id())
+            self.assertEqual(public_msg.sender().get_id(), assigned_user.get_id())
             self.assertEqual(public_msg.message(), "still alive")
         finally:
             client.close()
             server.stop()
 
-    def test_duplicate_user_id_is_rejected_without_overwriting_existing_member(self):
+    def test_client_supplied_duplicate_user_id_is_ignored(self):
         port = _find_free_port()
         if port is None:
             self.skipTest("local tcp sockets are not available in this environment")
@@ -144,22 +148,18 @@ class TestTcpChatErrors(TestCase):
         observer_user = SerializableUser(uuid4(), "Observer")
         try:
             tcp_protocol.send_packet(c1, tcp_protocol.encode_join(first_user))
-            _ = self._recv_until_type(c1, tcp_protocol.PT_S_USER_JOINED)
+            _ = self._recv_until_type(c1, tcp_protocol.PT_S_JOIN_ACK)
 
             tcp_protocol.send_packet(c2, tcp_protocol.encode_join(second_user))
-            err_payload = self._recv_until_type(c2, tcp_protocol.PT_S_ERROR)
-            self.assertEqual(
-                self._decode_error(err_payload),
-                (tcp_protocol.ERR_USER_ID_IN_USE, "user id already in use"),
-            )
+            _ = self._recv_until_type(c2, tcp_protocol.PT_S_JOIN_ACK)
 
             tcp_protocol.send_packet(observer, tcp_protocol.encode_join(observer_user))
-            _ = self._recv_until_type(observer, tcp_protocol.PT_S_USER_JOINED)
+            _ = self._recv_until_type(observer, tcp_protocol.PT_S_JOIN_ACK)
 
             tcp_protocol.send_packet(c1, tcp_protocol.encode_public_message("origin check"))
             pub_payload = self._recv_until_type(observer, tcp_protocol.PT_S_PUBLIC)
             public_msg = SerializableUserMessage.deserialize(BytesIO(pub_payload[1:]))
-            self.assertEqual(public_msg.sender().get_id(), duplicate_id)
+            self.assertNotEqual(public_msg.sender().get_id(), duplicate_id)
             self.assertEqual(public_msg.sender().get_name(), "Alice-1")
             self.assertEqual(public_msg.message(), "origin check")
         finally:
@@ -178,7 +178,7 @@ class TestTcpChatErrors(TestCase):
         host_client = self._connect_client(port)
         host_user = SerializableUser(uuid4(), "Host")
         tcp_protocol.send_packet(host_client, tcp_protocol.encode_join(host_user))
-        _ = self._recv_until_type(host_client, tcp_protocol.PT_S_USER_JOINED)
+        _ = self._recv_until_type(host_client, tcp_protocol.PT_S_JOIN_ACK)
 
         server.set_locked(True)
         client = self._connect_client(port)
@@ -193,9 +193,9 @@ class TestTcpChatErrors(TestCase):
 
             server.set_locked(False)
             tcp_protocol.send_packet(client, tcp_protocol.encode_join(user))
-            joined_payload = self._recv_until_type(client, tcp_protocol.PT_S_USER_JOINED)
-            joined_user = SerializableUser.deserialize(BytesIO(joined_payload[1:]))
-            self.assertEqual(joined_user.get_id(), user.get_id())
+            ack_payload = self._recv_until_type(client, tcp_protocol.PT_S_JOIN_ACK)
+            joined_user = tcp_protocol.decode_server_join_ack(BytesIO(ack_payload[1:]))
+            self.assertNotEqual(joined_user.get_id(), user.get_id())
         finally:
             host_client.close()
             client.close()
@@ -231,9 +231,9 @@ class TestTcpChatErrors(TestCase):
             )
 
             tcp_protocol.send_packet(client, tcp_protocol.encode_join(user))
-            joined_payload = self._recv_until_type(client, tcp_protocol.PT_S_USER_JOINED)
-            joined_user = SerializableUser.deserialize(BytesIO(joined_payload[1:]))
-            self.assertEqual(joined_user.get_id(), user.get_id())
+            ack_payload = self._recv_until_type(client, tcp_protocol.PT_S_JOIN_ACK)
+            joined_user = tcp_protocol.decode_server_join_ack(BytesIO(ack_payload[1:]))
+            self.assertNotEqual(joined_user.get_id(), user.get_id())
         finally:
             client.close()
             server.stop()

@@ -358,22 +358,22 @@ class TestCLIUI(TestCase):
 
         self.assertTrue(any(item.startswith("[host] Promoted") for item in output.items))
 
-    def test_cli_settings_can_update_name_and_id(self):
+    def test_cli_settings_can_update_name_without_id_option(self):
         output = _Output()
-        target_id = UUID("12345678-1234-5678-1234-567812345678")
-        reader = _Reader(["1", "Neo", "2", "invalid", "2", str(target_id), "0"])
+        reader = _Reader(["1", "Neo", "2", "0"])
         appearance = _DummyUser(uuid4(), "old")
+        initial_id = appearance.get_id()
         settings = CLISettingsUI(input_reader=reader, output_writer=output)
 
         settings.run(appearance)
 
         self.assertEqual(appearance.get_name(), "Neo")
-        self.assertEqual(appearance.get_id(), target_id)
-        self.assertTrue(any("Invalid UUID." in item for item in output.items))
+        self.assertEqual(appearance.get_id(), initial_id)
+        self.assertTrue(any("Invalid selection." in item for item in output.items))
 
     def test_cli_settings_can_update_name_color_with_color_name_and_hex(self):
         output = _Output()
-        reader = _Reader(["3", "blue", "3", "#a1b2c3", "3", "not-a-color", "0"])
+        reader = _Reader(["2", "blue", "2", "#a1b2c3", "2", "not-a-color", "0"])
         appearance = _DummyUser(uuid4(), "old")
         settings = AppSettings.default()
         ui = CLISettingsUI(input_reader=reader, output_writer=output)

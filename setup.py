@@ -14,4 +14,4 @@ if sys.platform == "win32":
     #    "plus": ["prompt_toolkit"],
     #}
 
-setup()
+setup(install_requires=['cryptography', 'argon2-cffi'])

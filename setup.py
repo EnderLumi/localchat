@@ -17,7 +17,7 @@ if sys.platform == "win32":
 """
 Do not add "argon2" to the requirements.
 "argon2" is installed as "argon2-cffi".
-Attempting to install it as "argon2" will install some different library.
+Attempting to install it as "argon2" will install some other library.
 """
 
 setup(install_requires=['cryptography', 'argon2-cffi'])

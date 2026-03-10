@@ -6,6 +6,7 @@ from threading import Lock, Thread
 from uuid import UUID, uuid4
 
 from localchat.config.defaults import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_MAX_CLIENTS, HARD_MAX_CLIENTS
+from localchat.config.limits import JOIN_TIMEOUT_S
 from localchat.net import SerializableUser
 from localchat.net.discovery import DiscoveredServer, UdpBroadcastDiscoveryResponder
 from localchat.net import tcp_protocol
@@ -137,10 +138,14 @@ class TcpServerLogic(AbstractLogic):
 
     def _client_loop(self, session: _Session):
         try:
+            session.sock.settimeout(JOIN_TIMEOUT_S)
+            joined = False
             while True:
                 payload = tcp_protocol.recv_packet(session.sock)
                 packet_type, body = tcp_protocol.decode_client_packet(payload)
                 if packet_type == tcp_protocol.PT_C_JOIN:
+                    joined = True
+                    session.sock.settimeout(None)
                     if session.user_id is not None:
                         self._send_to_session(
                             session,
@@ -258,6 +263,18 @@ class TcpServerLogic(AbstractLogic):
                             "unknown packet type",
                         ),
                     )
+        except TimeoutError:
+            if not joined:
+                try:
+                    self._send_to_session(
+                        session,
+                        tcp_protocol.encode_server_join_nack(
+                            tcp_protocol.ERR_JOIN_TIMEOUT,
+                            "join timeout",
+                        ),
+                    )
+                except Exception:
+                    pass
         except IOError:
             pass
         finally:

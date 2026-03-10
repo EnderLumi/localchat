@@ -251,6 +251,26 @@ class TestTcpChatErrors(TestCase):
             second.close()
             server.stop()
 
+    def test_join_times_out_without_client_payload(self):
+        port = _find_free_port()
+        if port is None:
+            self.skipTest("local tcp sockets are not available in this environment")
+        server = TcpServerLogic(host="127.0.0.1", port=port)
+        server.start()
+        sleep(0.05)
+        client = self._connect_client(port)
+        try:
+            client.settimeout(7.0)
+            payload = tcp_protocol.recv_packet(client)
+            self.assertEqual(payload[0], tcp_protocol.PT_S_JOIN_NACK)
+            self.assertEqual(
+                tcp_protocol.decode_server_join_nack(BytesIO(payload[1:])),
+                (tcp_protocol.ERR_JOIN_TIMEOUT, "join timeout"),
+            )
+        finally:
+            client.close()
+            server.stop()
+
     def test_join_internal_error_keeps_connection_for_retry(self):
         port = _find_free_port()
         if port is None:

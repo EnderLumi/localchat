@@ -24,18 +24,18 @@ PT_S_ERROR = 120
 
 # Structured server error codes
 ERR_GENERIC = "generic"
-ERR_JOIN_FIRST = "join_first"
 ERR_ALREADY_JOINED = "already_joined"
-ERR_USER_ID_IN_USE = "user_id_in_use"
-ERR_USER_NAME_IN_USE = "user_name_in_use"
-ERR_UNKNOWN_RECIPIENT = "unknown_recipient"
-ERR_UNKNOWN_PACKET_TYPE = "unknown_packet_type"
-ERR_UNKNOWN_COMMAND = "unknown_command"
-ERR_JOIN_REJECTED = "join_rejected"
-ERR_JOIN_FAILED = "join_failed"
 ERR_DISCONNECTED = "disconnected"
+ERR_JOIN_FIRST = "join_first"
+ERR_JOIN_FAILED = "join_failed"
+ERR_JOIN_REJECTED = "join_rejected"
+ERR_JOIN_TIMEOUT = "join_timeout"
 ERR_SERVER_FULL = "server_full"
-
+ERR_USER_NAME_IN_USE = "user_name_in_use"
+ERR_USER_ID_IN_USE = "user_id_in_use"
+ERR_UNKNOWN_COMMAND = "unknown_command"
+ERR_UNKNOWN_PACKET_TYPE = "unknown_packet_type"
+ERR_UNKNOWN_RECIPIENT = "unknown_recipient"
 
 def recv_packet(sock: socket, max_payload_size: int = MAX_TCP_PACKET_SIZE) -> bytes:
     length_bytes = _recv_exact_socket(sock, 4)

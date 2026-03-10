@@ -20,7 +20,7 @@
 - `test/localchatTest/net/*`
 - `test/localchatTest/net/discovery/*`
 
-## 3. Ausführen
+## 3. Run Tests
 - Ganze Suite:
   - `pytest -q`
 - Nur ein Bereich:

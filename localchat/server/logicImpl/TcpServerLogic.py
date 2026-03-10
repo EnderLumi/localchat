@@ -151,6 +151,15 @@ class TcpServerLogic(AbstractLogic):
                         )
                         continue
                     requested_user = tcp_protocol.decode_join(body)
+                    if self._is_name_in_use(requested_user.get_name()):
+                        self._send_to_session(
+                            session,
+                            tcp_protocol.encode_server_join_nack(
+                                tcp_protocol.ERR_USER_NAME_IN_USE,
+                                "user name already in use",
+                            ),
+                        )
+                        continue
                     user = self._new_session_user(requested_user.get_name())
                     session_user_id = user.get_id()
                     with self._sessions_lock:
@@ -357,3 +366,18 @@ class TcpServerLogic(AbstractLogic):
                 if candidate_id in self._sessions_by_user_id:
                     continue
             return SerializableUser(candidate_id, name)
+
+    def _is_name_in_use(self, name: str) -> bool:
+        normalized = name.strip().lower()
+        if len(normalized) == 0:
+            return False
+        with self._sessions_lock:
+            members = list(self._sessions_by_user_id.keys())
+        for user_id in members:
+            try:
+                user = self._get_member_by_id(user_id)
+            except KeyError:
+                continue
+            if user.get_name().strip().lower() == normalized:
+                return True
+        return False

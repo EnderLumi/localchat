@@ -227,6 +227,30 @@ class TestTcpChatErrors(TestCase):
             client.close()
             server.stop()
 
+    def test_join_rejected_for_duplicate_user_name(self):
+        port = _find_free_port()
+        if port is None:
+            self.skipTest("local tcp sockets are not available in this environment")
+        server = TcpServerLogic(host="127.0.0.1", port=port)
+        server.start()
+        sleep(0.05)
+        first = self._connect_client(port)
+        second = self._connect_client(port)
+        try:
+            tcp_protocol.send_packet(first, tcp_protocol.encode_join(SerializableUser(uuid4(), "Alice")))
+            _ = self._recv_until_type(first, tcp_protocol.PT_S_JOIN_ACK)
+
+            tcp_protocol.send_packet(second, tcp_protocol.encode_join(SerializableUser(uuid4(), "Alice")))
+            nack_payload = self._recv_until_type(second, tcp_protocol.PT_S_JOIN_NACK)
+            self.assertEqual(
+                tcp_protocol.decode_server_join_nack(BytesIO(nack_payload[1:])),
+                (tcp_protocol.ERR_USER_NAME_IN_USE, "user name already in use"),
+            )
+        finally:
+            first.close()
+            second.close()
+            server.stop()
+
     def test_join_internal_error_keeps_connection_for_retry(self):
         port = _find_free_port()
         if port is None:

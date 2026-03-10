@@ -65,6 +65,7 @@ Aktuell genutzte Codes:
 - `join_first`
 - `already_joined`
 - `user_id_in_use`
+- `user_name_in_use`
 - `unknown_recipient`
 - `unknown_packet_type`
 - `join_rejected`

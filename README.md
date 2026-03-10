@@ -34,7 +34,7 @@ The focus is a clean client/server split, a documented protocol, and a codebase 
   - `localchat start`
 
 ## Tests
-- `pytest -q` (more information in [TESTS.md](localchat/docs/TESTS.md))
+- `pytest -q` (more information in [TESTS.md](docs/TESTS.md))
 - Some network tests may skip if sockets are restricted
 
 ## License

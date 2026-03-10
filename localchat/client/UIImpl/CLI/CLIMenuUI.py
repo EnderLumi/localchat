@@ -272,6 +272,7 @@ class CLIMenuUI(AbstractUI):
             host=connect_host,
             port=info.get_port(),
             chat_name=info.get_name(),
+            skip_trust_prompt=True,
         )
         if not joined:
             try:
@@ -288,17 +289,19 @@ class CLIMenuUI(AbstractUI):
         port: int,
         chat_name: str,
         room_hint: str | None = None,
+        skip_trust_prompt: bool = False,
     ) -> bool:
         if room_hint is not None:
             self._output_writer(
                 f"Join room hint detected ('{room_hint}'). TCP CLI currently uses host/port only."
             )
-        trust = self._read_line(f"Trust server {host}:{port}? (y/N): ")
-        if trust is None:
-            return False
-        if trust.strip().lower() not in {"y", "yes"}:
-            self._output_writer("Join cancelled.")
-            return False
+        if not skip_trust_prompt:
+            trust = self._read_line(f"Trust server {host}:{port}? (y/N): ")
+            if trust is None:
+                return False
+            if trust.strip().lower() not in {"y", "yes"}:
+                self._output_writer("Join cancelled.")
+                return False
         try:
             chat = self._create_direct_chat(host, port, chat_name)
         except (IOError, ValueError) as e:

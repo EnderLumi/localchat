@@ -67,3 +67,11 @@
 ## nächste Schritte
 1. Zentrales Command-System ausbauen
 2. `/list`, `/whoami`, `/uptime`, `/version`
+
+
+## Ideen Dump
+- Beim starten wird ein link generiert z.B.: http://192.168.1.42:51121/join/room1
+  Diesem link kann man dann entweder in den browser eingeben, für alle die nicht localchat installiert haben.
+  Und man kann auch /join http://192.168.1.42:8080/join/room1
+- cursers Bibliothek für UI anschauen
+- python textual Bibliothek für noch bessere TUI anschauen

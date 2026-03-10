@@ -45,9 +45,8 @@
 - Rate-Limits gegen Spam/Flood
 
 ## Persistenz
-- Lokale User-Settings (Name, Farbe, zuletzt genutzte Server)
+- Lokale User-Settings (Name, Farbe, etc.)
 - Chat-Export als stabiles Format
-- optional: Verlauf pro Server
 - Settings-UI ausbauen (Theme/Color-Mode, Export-Pfad, Suggestions ein/aus)
 
 ## Moderation / Server-Features
@@ -66,7 +65,5 @@
 - `headortails`
 
 ## nächste Schritte
-1. Zentrales Command-System
+1. Zentrales Command-System ausbauen
 2. `/list`, `/whoami`, `/uptime`, `/version`
-3. Passwort-Handshake
-4. Datei-Transfer / Minigames

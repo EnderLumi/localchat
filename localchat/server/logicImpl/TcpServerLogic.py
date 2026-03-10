@@ -5,7 +5,7 @@ from socket import AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR, socket
 from threading import Lock, Thread
 from uuid import UUID, uuid4
 
-from localchat.config.defaults import DEFAULT_HOST, DEFAULT_PORT
+from localchat.config.defaults import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_MAX_CLIENTS, HARD_MAX_CLIENTS
 from localchat.net import SerializableUser
 from localchat.net.discovery import DiscoveredServer, UdpBroadcastDiscoveryResponder
 from localchat.net import tcp_protocol
@@ -34,10 +34,18 @@ class _SendUserEventToClients(EventListener[User]):
 
 
 class TcpServerLogic(AbstractLogic):
-    def __init__(self, host: str = DEFAULT_HOST, port: int = DEFAULT_PORT):
+    def __init__(
+        self,
+        host: str = DEFAULT_HOST,
+        port: int = DEFAULT_PORT,
+        max_clients: int = DEFAULT_MAX_CLIENTS,
+    ):
         super().__init__()
+        if max_clients <= 0 or max_clients > HARD_MAX_CLIENTS:
+            raise ValueError(f"max_clients must be in range 1..{HARD_MAX_CLIENTS}")
         self._host = host
         self._port = port
+        self._max_clients = max_clients
         self._password: str | None = None
         self._listener: socket | None = None
         self._accept_thread: Thread | None = None
@@ -103,6 +111,24 @@ class TcpServerLogic(AbstractLogic):
                 client_sock, addr = listener.accept()
             except OSError:
                 return
+            with self._sessions_lock:
+                active_sessions = len(self._sessions_by_user_id) + len(self._sessions_without_user)
+            if active_sessions >= self._max_clients:
+                try:
+                    tcp_protocol.send_packet(
+                        client_sock,
+                        tcp_protocol.encode_server_join_nack(
+                            tcp_protocol.ERR_SERVER_FULL,
+                            "server is full",
+                        ),
+                    )
+                except Exception:
+                    pass
+                try:
+                    client_sock.close()
+                except OSError:
+                    pass
+                continue
             session = _Session(client_sock, addr, Lock())
             with self._sessions_lock:
                 self._sessions_without_user.append(session)

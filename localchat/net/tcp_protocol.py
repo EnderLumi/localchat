@@ -33,6 +33,7 @@ ERR_UNKNOWN_COMMAND = "unknown_command"
 ERR_JOIN_REJECTED = "join_rejected"
 ERR_JOIN_FAILED = "join_failed"
 ERR_DISCONNECTED = "disconnected"
+ERR_SERVER_FULL = "server_full"
 
 
 def recv_packet(sock: socket, max_payload_size: int = MAX_TCP_PACKET_SIZE) -> bytes:

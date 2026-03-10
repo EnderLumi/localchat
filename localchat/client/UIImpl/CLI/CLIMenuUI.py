@@ -9,7 +9,7 @@ from localchat.client.UIImpl.AbstractUI import AbstractUI
 from localchat.client.UIImpl.CLI.CLIChatUI import CLIChatUI
 from localchat.client.UIImpl.CLI.CLISettingsUI import CLISettingsUI
 from localchat.client.parsing.join_target import parse_join_target
-from localchat.config.defaults import DEFAULT_HOST, DEFAULT_PORT
+from localchat.config.defaults import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_MAX_CLIENTS, HARD_MAX_CLIENTS
 from localchat.server.logicImpl import TcpServerLogic
 from localchat.settings import AppSettings, SettingsStore
 from localchat.util import Chat, ChatInformation, User
@@ -237,7 +237,23 @@ class CLIMenuUI(AbstractUI):
                 "Recommended range is 49152-65535."
             )
 
-        server = self._server_factory(host, port)
+        max_clients_input = self._read_line(f"Max clients (Enter = {DEFAULT_MAX_CLIENTS}, max {HARD_MAX_CLIENTS}): ")
+        if max_clients_input is None:
+            return
+        raw_max_clients = max_clients_input.strip() or str(DEFAULT_MAX_CLIENTS)
+        try:
+            max_clients = int(raw_max_clients)
+        except ValueError:
+            self._output_writer("Invalid max clients value.")
+            return
+        if max_clients <= 0 or max_clients > HARD_MAX_CLIENTS:
+            self._output_writer(f"Max clients must be in range 1-{HARD_MAX_CLIENTS}.")
+            return
+
+        try:
+            server = self._server_factory(host, port, max_clients)
+        except TypeError:
+            server = self._server_factory(host, port)
         try:
             server.start()
         except (IOError, OSError) as e:

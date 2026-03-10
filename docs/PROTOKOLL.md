@@ -70,6 +70,7 @@ Aktuell genutzte Codes:
 - `join_rejected`
 - `join_failed`
 - `disconnected`
+- `server_full`
 
 ## 6. Discovery (UDP)
 - Request/Response als JSON-Objekt (`utf-8`).

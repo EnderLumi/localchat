@@ -1,4 +1,4 @@
-# Ports, Pfade, Zeitlimits
+# static values for: Ports, Pfade, limits
 DEFAULT_HOST = "0.0.0.0"
 USERNAME_FILE = "~/.localchat_user"
 SETTINGS_FILE = "~/.localchat_settings.json"
@@ -7,8 +7,10 @@ DISCOVERY_PORT = 51111
 UDP_BROADCAST_PORT = 51122
 BUFFER_SIZE = 4096
 ENCODING = "utf-8"
+DEFAULT_MAX_CLIENTS = 16
+HARD_MAX_CLIENTS = 128
 
-# Settings
+# default Settings
 DEFAULT_HOST_SERVER_PORT = DEFAULT_PORT
 DEFAULT_NAME_COLOR = "white"
 DEFAULT_SHOW_TIMESTAMPS = False

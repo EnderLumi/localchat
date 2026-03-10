@@ -102,6 +102,32 @@ class TestTcpChatErrors(TestCase):
             client.close()
             server.stop()
 
+    def test_server_full_returns_join_nack(self):
+        port = _find_free_port()
+        if port is None:
+            self.skipTest("local tcp sockets are not available in this environment")
+        server = TcpServerLogic(host="127.0.0.1", port=port, max_clients=1)
+        server.start()
+        sleep(0.05)
+        c1 = self._connect_client(port)
+        user = SerializableUser(uuid4(), "Alice")
+        try:
+            tcp_protocol.send_packet(c1, tcp_protocol.encode_join(user))
+            _ = self._recv_until_type(c1, tcp_protocol.PT_S_JOIN_ACK)
+
+            c2 = self._connect_client(port)
+            try:
+                nack_payload = self._recv_until_type(c2, tcp_protocol.PT_S_JOIN_NACK)
+                self.assertEqual(
+                    tcp_protocol.decode_server_join_nack(BytesIO(nack_payload[1:])),
+                    (tcp_protocol.ERR_SERVER_FULL, "server is full"),
+                )
+            finally:
+                c2.close()
+        finally:
+            c1.close()
+            server.stop()
+
     def test_private_to_unknown_recipient_returns_error_but_connection_stays_alive(self):
         port = _find_free_port()
         if port is None:

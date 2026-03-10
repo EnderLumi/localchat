@@ -261,7 +261,7 @@ class TestCLIUI(TestCase):
 
     def test_cli_menu_direct_connect_opens_chat_and_returns(self):
         output = _Output()
-        reader = _Reader(["3", "127.0.0.1:51121", "/leave", "0"])
+        reader = _Reader(["3", "127.0.0.1:51121", "y", "/leave", "0"])
         ui = CLIMenuUI(input_reader=reader, output_writer=output)
         logic = _DummyLogic()
         logic.set_ui(ui)
@@ -276,7 +276,7 @@ class TestCLIUI(TestCase):
 
     def test_cli_menu_direct_connect_accepts_url(self):
         output = _Output()
-        reader = _Reader(["3", "http://host.local:8080/join/room1", "/leave", "0"])
+        reader = _Reader(["3", "http://host.local:8080/join/room1", "y", "/leave", "0"])
         ui = CLIMenuUI(input_reader=reader, output_writer=output)
         logic = _DummyLogic()
         logic.set_ui(ui)
@@ -292,7 +292,7 @@ class TestCLIUI(TestCase):
 
     def test_cli_menu_search_join_uses_unified_connect_path(self):
         output = _Output()
-        reader = _Reader(["1", "1", "/leave", "0"])
+        reader = _Reader(["1", "1", "y", "/leave", "0"])
         ui = CLIMenuUI(input_reader=reader, output_writer=output)
         logic = _DummyLogic()
         logic.search_results = [_DummyChat("discovered-server")]
@@ -385,7 +385,7 @@ class TestCLIUI(TestCase):
 
     def test_cli_menu_can_start_new_server_and_shutdown_stops_it(self):
         output = _Output()
-        reader = _Reader(["2", "", "", "", "/leave", "0"])
+        reader = _Reader(["2", "", "", "", "y", "/leave", "0"])
         created: list[_DummyServer] = []
 
         def _server_factory(host: str, port: int):
@@ -433,7 +433,7 @@ class TestCLIUI(TestCase):
 
     def test_cli_menu_warns_for_registered_port_range(self):
         output = _Output()
-        reader = _Reader(["2", "", "2048", "", "/leave", "0"])
+        reader = _Reader(["2", "", "2048", "", "y", "/leave", "0"])
         created: list[_DummyServer] = []
 
         def _server_factory(host: str, port: int):

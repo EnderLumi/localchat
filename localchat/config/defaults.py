@@ -1,4 +1,4 @@
-# static values for: Ports, Pfade, limits
+# static values for: Ports, paths and more
 DEFAULT_HOST = "0.0.0.0"
 USERNAME_FILE = "~/.localchat_user"
 SETTINGS_FILE = "~/.localchat_settings.json"

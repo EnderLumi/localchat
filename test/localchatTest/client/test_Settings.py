@@ -225,7 +225,7 @@ class TestSettings(TestCase):
         settings.default_host_server_port = 51234
 
         # Enter menu start-server, keep host default, use default port, then leave and exit.
-        reader = _Reader(["2", "", "", "", "/leave", "0"])
+        reader = _Reader(["2", "", "", "", "y", "/leave", "0"])
 
         created_ports: list[int] = []
 

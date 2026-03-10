@@ -293,6 +293,12 @@ class CLIMenuUI(AbstractUI):
             self._output_writer(
                 f"Join room hint detected ('{room_hint}'). TCP CLI currently uses host/port only."
             )
+        trust = self._read_line(f"Trust server {host}:{port}? (y/N): ")
+        if trust is None:
+            return False
+        if trust.strip().lower() not in {"y", "yes"}:
+            self._output_writer("Join cancelled.")
+            return False
         try:
             chat = self._create_direct_chat(host, port, chat_name)
         except (IOError, ValueError) as e:

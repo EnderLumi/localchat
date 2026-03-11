@@ -1,9 +1,10 @@
 from io import BytesIO
 from socket import AF_INET, SOCK_STREAM, socket
-from time import sleep
+from time import sleep, time
 from unittest import TestCase
 from uuid import uuid4
 
+from localchat.config.limits import RATE_LIMIT_MAX_VIOLATIONS
 from localchat.net import SerializableUser, SerializableUserMessage, tcp_protocol
 from localchat.server.logicImpl import TcpServerLogic
 
@@ -266,6 +267,97 @@ class TestTcpChatErrors(TestCase):
                 tcp_protocol.decode_server_join_nack(BytesIO(nack_payload[1:])),
                 (tcp_protocol.ERR_INVALID_USER_NAME, "invalid user name"),
             )
+        finally:
+            client.close()
+            server.stop()
+
+    def test_rate_limited_public_messages_return_error(self):
+        port = _find_free_port()
+        if port is None:
+            self.skipTest("local tcp sockets are not available in this environment")
+        server = TcpServerLogic(host="127.0.0.1", port=port)
+        server.start()
+        sleep(0.05)
+        client = self._connect_client(port)
+        client.settimeout(0.1)
+        user = SerializableUser(uuid4(), "Alice")
+        try:
+            tcp_protocol.send_packet(client, tcp_protocol.encode_join(user))
+            _ = self._recv_until_type(client, tcp_protocol.PT_S_JOIN_ACK)
+
+            got_rate_limited = False
+            for idx in range(200):
+                try:
+                    tcp_protocol.send_packet(client, tcp_protocol.encode_public_message(f"msg-{idx}"))
+                except OSError:
+                    break
+
+            deadline = time() + 2.0
+            while time() < deadline:
+                try:
+                    payload = tcp_protocol.recv_packet(client)
+                except TimeoutError:
+                    continue
+                if payload[0] != tcp_protocol.PT_S_ERROR:
+                    continue
+                code, _msg = self._decode_error(payload)
+                if code == tcp_protocol.ERR_RATE_LIMITED:
+                    got_rate_limited = True
+                    break
+                if code == tcp_protocol.ERR_DISCONNECTED:
+                    break
+            self.assertTrue(got_rate_limited)
+        finally:
+            client.close()
+            server.stop()
+
+    def test_rate_limit_kicks_after_repeated_violations(self):
+        port = _find_free_port()
+        if port is None:
+            self.skipTest("local tcp sockets are not available in this environment")
+        server = TcpServerLogic(host="127.0.0.1", port=port)
+        server.start()
+        sleep(0.05)
+        client = self._connect_client(port)
+        client.settimeout(0.1)
+        user = SerializableUser(uuid4(), "Alice")
+        try:
+            tcp_protocol.send_packet(client, tcp_protocol.encode_join(user))
+            _ = self._recv_until_type(client, tcp_protocol.PT_S_JOIN_ACK)
+
+            rate_limited = 0
+            disconnected = False
+            for idx in range(500):
+                try:
+                    tcp_protocol.send_packet(client, tcp_protocol.encode_public_message(f"msg-{idx}"))
+                except OSError:
+                    disconnected = True
+                    break
+
+            deadline = time() + 3.0
+            while time() < deadline:
+                try:
+                    payload = tcp_protocol.recv_packet(client)
+                except TimeoutError:
+                    continue
+                except IOError:
+                    disconnected = True
+                    break
+                if payload[0] != tcp_protocol.PT_S_ERROR:
+                    continue
+                code, _msg = self._decode_error(payload)
+                if code == tcp_protocol.ERR_RATE_LIMITED:
+                    rate_limited += 1
+                if code == tcp_protocol.ERR_DISCONNECTED:
+                    disconnected = True
+                    break
+                if rate_limited >= RATE_LIMIT_MAX_VIOLATIONS:
+                    break
+
+            self.assertGreaterEqual(rate_limited, RATE_LIMIT_MAX_VIOLATIONS)
+            if not disconnected:
+                with self.assertRaises(IOError):
+                    _ = tcp_protocol.recv_packet(client)
         finally:
             client.close()
             server.stop()

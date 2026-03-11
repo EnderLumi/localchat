@@ -74,6 +74,7 @@ Aktuell genutzte Codes:
 - `server_full`
 - `join_timeout`
 - `invalid_user_name`
+- `rate_limited`
 
 ## 6. Discovery (UDP)
 - Request/Response als JSON-Objekt (`utf-8`).

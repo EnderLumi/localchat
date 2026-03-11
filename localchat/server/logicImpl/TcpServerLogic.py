@@ -3,10 +3,16 @@ from __future__ import annotations
 from dataclasses import dataclass
 from socket import AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR, socket
 from threading import Lock, Thread
+from time import monotonic
 from uuid import UUID, uuid4
 
 from localchat.config.defaults import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_MAX_CLIENTS, HARD_MAX_CLIENTS
-from localchat.config.limits import JOIN_TIMEOUT_S
+from localchat.config.limits import (
+    JOIN_TIMEOUT_S,
+    RATE_LIMIT_BURST,
+    RATE_LIMIT_MAX_VIOLATIONS,
+    RATE_LIMIT_MSG_PER_SEC,
+)
 from localchat.net import SerializableUser
 from localchat.net.discovery import DiscoveredServer, UdpBroadcastDiscoveryResponder
 from localchat.net import tcp_protocol
@@ -22,6 +28,9 @@ class _Session:
     addr: tuple[str, int]
     send_lock: Lock
     user_id: UUID | None = None
+    rate_tokens: float = RATE_LIMIT_BURST
+    rate_last_refill: float = 0.0
+    rate_limit_violations: int = 0
 
 
 class _SendUserEventToClients(EventListener[User]):
@@ -131,6 +140,9 @@ class TcpServerLogic(AbstractLogic):
                     pass
                 continue
             session = _Session(client_sock, addr, Lock())
+            session.rate_tokens = RATE_LIMIT_BURST
+            session.rate_last_refill = monotonic()
+            session.rate_limit_violations = 0
             with self._sessions_lock:
                 self._sessions_without_user.append(session)
             thread = Thread(target=self._client_loop, args=(session,), name=f"localchat tcp client {addr}", daemon=True)
@@ -212,6 +224,10 @@ class TcpServerLogic(AbstractLogic):
                             ),
                         )
                         continue
+                    if not self._consume_rate_limit(session):
+                        if not self._handle_rate_limit_violation(session):
+                            return
+                        continue
                     message = tcp_protocol.decode_public_message(body)
                     sender = self._get_member_by_id(session.user_id)
                     user_message = self._make_user_message(sender, message)
@@ -226,6 +242,10 @@ class TcpServerLogic(AbstractLogic):
                                 "join first",
                             ),
                         )
+                        continue
+                    if not self._consume_rate_limit(session):
+                        if not self._handle_rate_limit_violation(session):
+                            return
                         continue
                     recipient, message = tcp_protocol.decode_private_message(body)
                     try:
@@ -397,6 +417,51 @@ class TcpServerLogic(AbstractLogic):
                 if candidate_id in self._sessions_by_user_id:
                     continue
             return SerializableUser(candidate_id, name)
+
+    @staticmethod
+    def _consume_rate_limit(session: _Session) -> bool:
+        now = monotonic()
+        elapsed = now - session.rate_last_refill
+        if elapsed > 0:
+            session.rate_tokens = min(
+                RATE_LIMIT_BURST,
+                session.rate_tokens + (elapsed * RATE_LIMIT_MSG_PER_SEC),
+            )
+            session.rate_last_refill = now
+        if session.rate_tokens >= 1.0:
+            session.rate_tokens -= 1.0
+            return True
+        return False
+
+    def _handle_rate_limit_violation(self, session: _Session) -> bool:
+        session.rate_limit_violations += 1
+        try:
+            self._send_to_session(
+                session,
+                tcp_protocol.encode_server_error(
+                    tcp_protocol.ERR_RATE_LIMITED,
+                    "Please do not spam. You are sending messages too quickly.",
+                ),
+            )
+        except Exception:
+            pass
+        if session.rate_limit_violations >= RATE_LIMIT_MAX_VIOLATIONS:
+            if session.user_id is not None:
+                try:
+                    self._disconnect_member_impl(session.user_id, "rate limit exceeded")
+                except Exception:
+                    pass
+                try:
+                    self._unregister_member(session.user_id)
+                except Exception:
+                    pass
+            else:
+                try:
+                    session.sock.close()
+                except OSError:
+                    pass
+            return False
+        return True
 
     def _is_name_in_use(self, name: str) -> bool:
         normalized = name.strip().lower()

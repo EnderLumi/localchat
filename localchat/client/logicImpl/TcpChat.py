@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import deque
 from ipaddress import IPv4Address, IPv6Address, ip_address
 from socket import AF_INET, SOCK_STREAM, gaierror, gethostbyname, socket
 from threading import Event as ThreadEvent, Lock, Thread
@@ -64,6 +65,8 @@ class _TcpUserMessage(UserMessage):
 
 class TcpChat(AbstractChat):
     _JOIN_TIMEOUT_S = 2.0
+    _UNKNOWN_PACKET_WINDOW_S = 10.0
+    _UNKNOWN_PACKET_THRESHOLD = 4
 
     def __init__(self, chat_id: UUID, chat_name: str, host: str, port: int):
         super().__init__()
@@ -77,6 +80,7 @@ class TcpChat(AbstractChat):
         self._recv_stop = ThreadEvent()
         self._send_lock = Lock()
         self._joined = False
+        self._unknown_packet_timestamps = deque()
 
     def get_chat_info(self) -> ChatInformation:
         return _TcpChatInformation(
@@ -235,7 +239,22 @@ class TcpChat(AbstractChat):
             self.on_user_send_private_message().handle(Event(chat_id, sys_msg))
             return
 
-        raise IOError(f"unknown packet type: {packet_type}")
+        now = time()
+        sys_msg = _TcpUserMessage(self._server_user, f"unknown packet type {packet_type} ignored", now)
+        self.on_user_send_private_message().handle(Event(chat_id, sys_msg))
+
+        with self._lock:
+            self._unknown_packet_timestamps.append(now)
+            cutoff = now - self._UNKNOWN_PACKET_WINDOW_S
+            while self._unknown_packet_timestamps and self._unknown_packet_timestamps[0] < cutoff:
+                self._unknown_packet_timestamps.popleft()
+            unknown_count = len(self._unknown_packet_timestamps)
+
+        if unknown_count >= self._UNKNOWN_PACKET_THRESHOLD:
+            warn_msg = _TcpUserMessage(self._server_user, "sent too many unknown packet types.", now)
+            self.on_user_send_private_message().handle(Event(chat_id, warn_msg))
+            raise IOError("too many unknown packet types")
+        return
 
     def _send_packet(self, sock: socket, payload: bytes):
         try:

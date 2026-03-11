@@ -271,6 +271,49 @@ class TestTcpChatErrors(TestCase):
             client.close()
             server.stop()
 
+    def test_broadcast_failure_closes_session(self):
+        port = _find_free_port()
+        if port is None:
+            self.skipTest("local tcp sockets are not available in this environment")
+        server = TcpServerLogic(host="127.0.0.1", port=port)
+        server.start()
+        sleep(0.05)
+        c1 = self._connect_client(port)
+        c2 = self._connect_client(port)
+        try:
+            tcp_protocol.send_packet(c1, tcp_protocol.encode_join(SerializableUser(uuid4(), "Alice")))
+            ack1 = self._recv_until_type(c1, tcp_protocol.PT_S_JOIN_ACK)
+            joined1 = tcp_protocol.decode_server_join_ack(BytesIO(ack1[1:]))
+
+            tcp_protocol.send_packet(c2, tcp_protocol.encode_join(SerializableUser(uuid4(), "Bob")))
+            ack2 = self._recv_until_type(c2, tcp_protocol.PT_S_JOIN_ACK)
+            joined2 = tcp_protocol.decode_server_join_ack(BytesIO(ack2[1:]))
+
+            self.assertEqual(len(server.list_members()), 2)
+
+            target_session = server._sessions_by_user_id.get(joined2.get_id())
+            self.assertIsNotNone(target_session)
+
+            orig_send = TcpServerLogic._send_to_session
+
+            def failing_send(session, payload):
+                if session is target_session:
+                    raise IOError("simulated send failure")
+                return orig_send(session, payload)
+
+            server._send_to_session = failing_send
+
+            server.post_system_message("broadcast")
+            sleep(0.05)
+
+            remaining_ids = {u.get_id() for u in server.list_members()}
+            self.assertIn(joined1.get_id(), remaining_ids)
+            self.assertNotIn(joined2.get_id(), remaining_ids)
+        finally:
+            c1.close()
+            c2.close()
+            server.stop()
+
     def test_join_internal_error_keeps_connection_for_retry(self):
         port = _find_free_port()
         if port is None:

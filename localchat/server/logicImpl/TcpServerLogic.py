@@ -365,11 +365,15 @@ class TcpServerLogic(AbstractLogic):
     def _broadcast_payload(self, payload: bytes):
         with self._sessions_lock:
             sessions = list(self._sessions_by_user_id.values())
+        failed_sessions: list[_Session] = []
         for session in sessions:
             try:
                 self._send_to_session(session, payload)
-            except IOError as e:
+            except (IOError, OSError) as e:
                 self._emit_error(e)
+                failed_sessions.append(session)
+        for session in failed_sessions:
+            self._close_session(session)
 
     @staticmethod
     def _send_to_session(session: _Session, payload: bytes):

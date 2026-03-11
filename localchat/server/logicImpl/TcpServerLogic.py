@@ -156,7 +156,17 @@ class TcpServerLogic(AbstractLogic):
                         )
                         continue
                     requested_user = tcp_protocol.decode_join(body)
-                    if self._is_name_in_use(requested_user.get_name()):
+                    requested_name = requested_user.get_name().strip()
+                    if len(requested_name) == 0:
+                        self._send_to_session(
+                            session,
+                            tcp_protocol.encode_server_join_nack(
+                                tcp_protocol.ERR_INVALID_USER_NAME,
+                                "invalid user name",
+                            ),
+                        )
+                        continue
+                    if self._is_name_in_use(requested_name):
                         self._send_to_session(
                             session,
                             tcp_protocol.encode_server_join_nack(
@@ -165,7 +175,7 @@ class TcpServerLogic(AbstractLogic):
                             ),
                         )
                         continue
-                    user = self._new_session_user(requested_user.get_name())
+                    user = self._new_session_user(requested_name)
                     session_user_id = user.get_id()
                     with self._sessions_lock:
                         if session in self._sessions_without_user:

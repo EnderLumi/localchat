@@ -251,6 +251,25 @@ class TestTcpChatErrors(TestCase):
             second.close()
             server.stop()
 
+    def test_join_rejected_for_empty_user_name(self):
+        port = _find_free_port()
+        if port is None:
+            self.skipTest("local tcp sockets are not available in this environment")
+        server = TcpServerLogic(host="127.0.0.1", port=port)
+        server.start()
+        sleep(0.05)
+        client = self._connect_client(port)
+        try:
+            tcp_protocol.send_packet(client, tcp_protocol.encode_join(SerializableUser(uuid4(), "   ")))
+            nack_payload = self._recv_until_type(client, tcp_protocol.PT_S_JOIN_NACK)
+            self.assertEqual(
+                tcp_protocol.decode_server_join_nack(BytesIO(nack_payload[1:])),
+                (tcp_protocol.ERR_INVALID_USER_NAME, "invalid user name"),
+            )
+        finally:
+            client.close()
+            server.stop()
+
     def test_join_times_out_without_client_payload(self):
         port = _find_free_port()
         if port is None:

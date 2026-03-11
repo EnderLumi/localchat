@@ -26,6 +26,7 @@ PT_S_ERROR = 120
 ERR_GENERIC = "generic"
 ERR_ALREADY_JOINED = "already_joined"
 ERR_DISCONNECTED = "disconnected"
+ERR_INVALID_USER_NAME = "invalid_user_name"
 ERR_JOIN_FIRST = "join_first"
 ERR_JOIN_FAILED = "join_failed"
 ERR_JOIN_REJECTED = "join_rejected"
